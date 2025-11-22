@@ -1,4 +1,5 @@
 import uuid
+import urllib.parse
 import csv
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -490,7 +491,8 @@ def export_attempt_csv(request, attempt_id):
     # Crear respuesta HTTP
     response = HttpResponse(content_type="text/csv")
     filename = f"Intento # {attempt.id} de {attempt.student} ({attempt.started_at.strftime('%Y-%m-%d')}).csv"
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    ascii_filename = urllib.parse.quote(filename)
+    response["Content-Disposition"] = f'attachment; filename="{ascii_filename}"'
     response.write("\ufeff".encode("utf8"))
 
     # Generar CSV
@@ -561,7 +563,8 @@ def export_exam_results(request, exam_id):
     # Crear CSV
     response = HttpResponse(content_type="text/csv")
     filename = f"Resultados de {exam.title} ({timezone.now().strftime('%Y-%m-%d')}).csv"
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    ascii_filename = urllib.parse.quote(filename)
+    response["Content-Disposition"] = f'attachment; filename="{ascii_filename}"'
     response.write("\ufeff".encode("utf8"))
 
     writer = csv.writer(response)
