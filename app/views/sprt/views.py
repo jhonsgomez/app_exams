@@ -1,5 +1,6 @@
 import uuid
 import csv
+from io import StringIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from decorators.admin import is_admin
@@ -18,7 +19,6 @@ from app.models import (
 )
 from app.services.sprt_service import SPRTService
 from django.core.paginator import Paginator
-from utils.report import export_attempt_to_csv
 
 
 # -------------------------------------------------------------------
@@ -495,13 +495,55 @@ def export_attempt_csv(request, attempt_id):
         messages.error(request, "No tienes permiso para exportar este intento.")
         return redirect("exams_available")
 
-    # Generar CSV
-    csv_content = export_attempt_to_csv(attempt)
-
     # Crear respuesta HTTP
-    response = HttpResponse(csv_content, content_type="text/csv")
+    response = HttpResponse(content_type="text/csv")
     filename = f"Intento # {attempt.id} de {attempt.student} ({attempt.started_at.strftime('%Y-%m-%d')}).csv"
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff".encode("utf8").decode("utf8"))
+
+    # Generar CSV
+    writer = csv.writer(response)
+
+    # Encabezados
+    writer.writerow(
+        [
+            "#",
+            "Nivel",
+            "Área",
+            "Tema de la Pregunta",
+            "Respuesta Seleccionada",
+            "Es Correcta",
+            "Tiempo (s)",
+            "Tiempo Permitido (s)",
+            "Violación Tiempo",
+            "Índice S",
+        ]
+    )
+
+    # Datos
+    for answer in attempt.answers.all().order_by("question_number"):
+        writer.writerow(
+            [
+                answer.question_number,
+                answer.difficulty_level.name if answer.difficulty_level else "N/A",
+                (
+                    answer.question.knowledge_area.name
+                    if answer.question.knowledge_area
+                    else "N/A"
+                ),
+                (answer.question.topic if answer.question.topic else "N/A"),
+                (
+                    answer.selected_option.option_text[:30] + "..."
+                    if answer.selected_option.option_text
+                    else "Respuesta no disponible"
+                ),
+                "Sí" if answer.is_correct else "No",
+                answer.time_taken_seconds,
+                answer.allowed_time_seconds,
+                "Sí" if answer.time_violation else "No",
+                round(answer.s_index_after, 4),
+            ]
+        )
 
     return response
 
@@ -528,7 +570,7 @@ def export_exam_results(request, exam_id):
     response = HttpResponse(content_type="text/csv")
     filename = f"Resultados de {exam.title} ({timezone.now().strftime('%Y-%m-%d')}).csv"
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write(u'\ufeff'.encode('utf8'))
+    response.write("\ufeff".encode("utf8"))
 
     writer = csv.writer(response)
 
@@ -550,7 +592,7 @@ def export_exam_results(request, exam_id):
             "Consistencia",
         ]
     )
-    
+
     contador = 1
 
     # Datos
