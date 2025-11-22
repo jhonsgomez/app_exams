@@ -1,6 +1,5 @@
 import uuid
 import csv
-from io import StringIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from decorators.admin import is_admin
