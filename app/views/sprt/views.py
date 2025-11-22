@@ -480,25 +480,18 @@ def exam_students(request, exam_id):
 # Generar y descargar reporte CSV de un intento
 # -------------------------------------------------------------------
 @login_required(login_url="auth_login")
+@is_admin
 def export_attempt_csv(request, attempt_id):
     """
     Exporta los resultados de un intento a CSV.
     """
     attempt = get_object_or_404(ExamAttempt, pk=attempt_id)
 
-    # Verificar permisos
-    if request.user != attempt.student and not request.user.role.name in [
-        "super_admin",
-        "admin",
-    ]:
-        messages.error(request, "No tienes permiso para exportar este intento.")
-        return redirect("exams_available")
-
     # Crear respuesta HTTP
     response = HttpResponse(content_type="text/csv")
     filename = f"Intento # {attempt.id} de {attempt.student} ({attempt.started_at.strftime('%Y-%m-%d')}).csv"
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    response.write("\ufeff".encode("utf8").decode("utf8"))
+    response.write("\ufeff".encode("utf8"))
 
     # Generar CSV
     writer = csv.writer(response)
