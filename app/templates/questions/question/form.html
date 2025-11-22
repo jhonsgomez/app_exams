@@ -1,0 +1,751 @@
+{% extends 'base_form.html' %}
+
+{% block page_title %}Gestión | Preguntas{% endblock %}
+
+{% block back_button %}
+    <a href="{% url 'questions_bank_questions' question_bank.id %}" class="text-indigo-600 inline-flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+    </a>
+{% endblock %}
+
+{% block form_title %}
+    {% if question %}
+        Editar
+    {% else %}
+        Nueva
+    {% endif %}
+{% endblock %}
+
+{% block form_badge %}Pregunta{% endblock %}
+
+{% block form_fields %}
+    {% if question %}
+        <input type="hidden" name="question_id" id="question_id" value="{{ question.pk }}">
+    {% endif %}
+    {% if question_bank %}
+        <input type="hidden" name="question_bank_id" id="question_bank_id" value="{{ question_bank.pk }}">
+    {% endif %}
+
+    <span class="block text-sm font-medium text-gray-700 mb-2">Información básica de la Pregunta</span>
+    <p class="text-gray-500 text-xs mt-3 mb-2">Proporcione detalles básicos sobre la pregunta.</p>
+
+    <hr class="mt-4 border-t border-gray-400">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="difficulty_level" class="block text-sm font-medium text-gray-700 mb-1">Nivel de Dificultad</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-tachometer-alt"></i>
+                </span>
+                <select name="difficulty_level" id="difficulty_level" required
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Seleccione un nivel</option>
+                    {% for level in difficulty_levels %}
+                        <option value="{{ level.id }}" {% if question and question.difficulty_level.id == level.id %}selected{% endif %}>{{ level.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- 1. Área de Conocimiento -->
+        <div>
+            <label for="knowledge_area" class="block text-sm font-medium text-gray-700 mb-1">Área de Conocimiento</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-book"></i>
+                </span>
+                <select name="knowledge_area" id="knowledge_area" required
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Seleccione un área</option>
+                    {% for area in knowledge_areas %}
+                        <option value="{{ area.id }}" {% if question and question.knowledge_area.id == area.id %}selected{% endif %}>{{ area.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- 2. Tema de la Pregunta -->
+        <div>
+            <label for="topic" class="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-tag"></i>
+                </span>
+                <input type="text" name="topic" id="topic" required
+                    value="{% if question %}{{ question.topic }}{% else %}{{ form.topic.value|default_if_none:'' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Escribe el tema de la pregunta">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="time" class="block text-sm font-medium text-gray-700 mb-1">Tiempo (minutos)</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-clock"></i>
+                </span>
+                <input type="number" name="time" id="time" min="1" max="15" required
+                    value="{% if question %}{{ question.time }}{% else %}{{ form.time.value|default_if_none:'5' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Tiempo en minutos">
+            </div>
+        </div>
+    </div>
+
+    <span class="block text-sm font-medium text-gray-700 mb-2">Enunciado inicial de la pregunta</span>
+    <p class="text-gray-500 text-xs mt-3 mb-2">Proporcione el enunciado completo de la pregunta.</p>
+
+    <hr class="mt-4 border-t border-gray-400">
+
+    <div class="mb-4">
+        <label for="start_statement" class="block text-sm font-medium text-gray-700 mb-1"></label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-comment-dots"></i>
+            </span>
+            <textarea name="start_statement" id="start_statement" rows="3"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Escribe un enunciado inicial para la pregunta">{% if question and question.start_statement %}{{ question.start_statement }}{% else %}{{ form.start_statement.value|default_if_none:'' }}{% endif %}</textarea>
+        </div>
+    </div>
+
+    <span class="block text-sm font-medium text-gray-700 mb-2 mt-8">Complemento del enunciado de la pregunta</span>
+    <p class="text-gray-500 text-xs mt-3 mb-2">Proporcione información adicional o contexto para la pregunta.</p>
+
+    <hr class="mt-4 border-t border-gray-400">
+
+    <!-- 3. Tipo de Enunciado -->
+    <div class="mb-4">
+        <label for="statement_type" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Enunciado</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-list"></i>
+            </span>
+            <select name="statement_type" id="statement_type"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="text" {% if question and question.statement_type == "text" %}selected{% endif %}>Texto</option>
+                <option value="image" {% if question and question.statement_type == "image" %}selected{% endif %}>Imagen</option>
+                <option value="audio" {% if question and question.statement_type == "audio" %}selected{% endif %}>Audio</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 4. Campo dinámico según tipo -->
+    <div id="statement_fields" class="mb-3">
+        <div id="statement_text_field" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Enunciado</label>
+                <div name="statement_editor" 
+                    id="statement_editor" 
+                    class="py-2 w-full border border-gray-300 rounded"
+                    style="height: 150px;">
+                </div>
+            <input type="hidden" name="statement_text" id="statement_text" value="{{ question.statement_text|default_if_none:'' }}">
+        </div>
+        <div id="statement_image_field" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Enunciado</label>
+            <div class="mb-6">
+                <input 
+                    type="file" 
+                    name="statement_image" 
+                    accept="image/*"
+                    class="block w-full text-sm border border-gray-300 rounded cursor-pointer focus:outline-none">
+            </div>
+        </div>
+        <div id="statement_audio_field" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Enunciado</label>
+            <div class="mb-6">
+                <input 
+                    type="file" 
+                    name="statement_audio" 
+                    accept="audio/*"
+                    class="block w-full text-sm border border-gray-300 rounded cursor-pointer focus:outline-none">
+            </div>
+        </div>
+    </div>
+
+    <span class="block text-sm font-medium text-gray-700 mb-2 mt-8">Enunciado final de la pregunta</span>
+    <p class="text-gray-500 text-xs mt-3 mb-2">Proporcione el enunciado completo de la pregunta.</p>
+
+    <hr class="mt-4 border-t border-gray-400">
+
+    <div class="mb-4">
+        <label for="end_statement" class="block text-sm font-medium text-gray-700 mb-1"></label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-comment-dots"></i>
+            </span>
+            <textarea name="end_statement" id="end_statement" rows="3"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Escribe un enunciado final para la pregunta">{% if question and question.end_statement %}{{ question.end_statement }}{% else %}{{ form.end_statement.value|default_if_none:'' }}{% endif %}</textarea>
+        </div>
+    </div>
+
+    <span class="block text-sm font-medium text-gray-700 mb-2 mt-8">Opciones de Respuesta</span>
+    <p class="text-gray-500 text-xs mt-3 mb-2">Proporcione las opciones de respuesta para la pregunta.</p>
+
+    <hr class="mt-4 border-t border-gray-400">
+
+    <!-- 5. Opciones de Respuesta -->
+    <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2"></label>
+        <div id="options_container"></div>
+        <button type="button" id="add_option"
+            class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded shadow-md hover:bg-indigo-700 transition cursor-pointer">
+            <i class="fa-solid fa-plus mr-1"></i> Añadir Opción
+        </button>
+    </div>
+
+    <!-- QuillJS (Editor WYSIWYG para feedback) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <script>
+        const statement_editor = document.getElementById('statement_editor');
+        const statement_text = document.getElementById('statement_text');
+
+        let quill_statement = new Quill(statement_editor, {
+            theme: 'snow',
+            placeholder: 'Escribe el enunciado para esta pregunta...',
+            modules: { 
+                toolbar: [['bold', 'italic', 'underline'], [{ 'color': [] }, { 'size': [] }], ['link'], [{'align': []}], ['clean']]
+            }
+        });
+
+        quill_statement.on('text-change', () => {
+            const editorId = quill_statement.container.id;
+            const idEditor = editorId.split('-')[1];
+
+            statement_text.value = quill_statement.root.innerHTML;
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // ====== Enunciado Dinámico ======
+            const statementType = document.getElementById("statement_type");
+            const textField = document.getElementById("statement_text_field");
+            const imageField = document.getElementById("statement_image_field");
+            const audioField = document.getElementById("statement_audio_field");
+            const question_id = "{{ question }}" ? `{{ question.id }}` : "";
+
+            let isInitialLoad = true;
+
+            const toggleStatementFields = () => {
+                [textField, imageField, audioField].forEach(el => {
+                    el.classList.add("hidden");
+
+                    const preview = el.querySelector(".preview-wrapper");
+                    if (preview) preview.remove();
+
+                    const hiddenInput = el.querySelector("input[type='hidden'][name^='existing_']");
+                    if (hiddenInput) hiddenInput.remove();
+
+                    if (!isInitialLoad) {
+                        quill_statement.setContents([]);
+                        statement_text.value = "";
+            
+                        imageField.querySelector("input[type='file']").value = "";
+                        audioField.querySelector("input[type='file']").value = "";
+                    }
+
+                    // Mostrar el ícono nuevamente si existe
+                    const iconSpan = el.querySelector("span.absolute");
+                    if (iconSpan) iconSpan.classList.remove("hidden");
+
+                    // Quitar todos los required
+                    imageField.querySelector("input[type='file']").removeAttribute("required");
+                    audioField.querySelector("input[type='file']").removeAttribute("required");
+                });
+
+                if (statementType.value === "text") {
+                    textField.classList.remove("hidden");
+                }
+                if (statementType.value === "image") {
+                    imageField.querySelector("input[type='file']").setAttribute("required", "required");
+                    imageField.classList.remove("hidden");
+                }
+                if (statementType.value === "audio") {
+                    audioField.querySelector("input[type='file']").setAttribute("required", "required");
+                    audioField.classList.remove("hidden");
+                }
+            };
+
+            toggleStatementFields();
+            isInitialLoad = false;
+
+            // Inicializar quill si existe un statement_text previo
+            const existingStatementText = `{{ question.statement_text|default_if_none:'' }}`;
+            if (existingStatementText.trim() !== "") {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(existingStatementText, 'text/html');
+                const unescapedHtml = doc.documentElement.textContent;
+
+                const sanitizedHtml = DOMPurify.sanitize(unescapedHtml); 
+
+                quill_statement.root.innerHTML = sanitizedHtml;
+                statement_text.value = sanitizedHtml;
+            }
+
+            statementType.addEventListener("change", toggleStatementFields);
+
+            // ====== Opciones Dinámicas ======
+            const optionsContainer = document.getElementById("options_container");
+            const addOptionBtn = document.getElementById("add_option");
+            let optionCount = 0;
+
+            const createOption = () => {
+                optionCount++;
+                const wrapper = document.createElement("div");
+                wrapper.className = "p-8 mb-6 border border-gray-300 rounded bg-white shadow-md relative animate-fadeIn";
+
+                wrapper.innerHTML = `
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700">Contenido</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                                <i class="fa-solid fa-list"></i>
+                            </span>
+                            <select name="options[${optionCount}][option_type]"
+                                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="text">Texto</option>
+                                <option value="image">Imagen</option>
+                                <option value="audio">Audio</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <textarea name="options[${optionCount}][option_text]" rows="2"
+                            placeholder="Texto de la opción"
+                            class="pl-4 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Escribe el enunciado de la pregunta"></textarea>
+                    
+                        <input 
+                            type="file" 
+                            name="options[${optionCount}][option_image]" 
+                            accept="image/*"
+                            class="block w-full text-sm border border-gray-300 rounded cursor-pointer focus:outline-none">
+
+                        <input 
+                            type="file" 
+                            name="options[${optionCount}][option_audio]"
+                            accept="audio/*"
+                            class="block w-full text-sm border border-gray-300 rounded cursor-pointer focus:outline-none">
+                    </div>
+
+                    <!-- Feedback con Quill -->
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700">Retroalimentación</label>
+                        <div>
+                            <div id="editor-${optionCount}" class="quill-editor border rounded shadow-sm bg-white" style="height: 150px;"></div>
+                            <input type="hidden" name="options[${optionCount}][feedback]" id="feedback-${optionCount}">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-8 mb-3">
+                        <label class="flex items-center space-x-2 cursor-pointer" style="user-select: none;">
+                            <span class="text-md flex items-center text-green-600">
+                                <input type="checkbox" name="options[${optionCount}][is_correct]" class="mr-2 border-gray-200 rounded">
+                                <i class="fa-solid fa-check-circle ml-1"></i>
+                                &nbsp;Correcta
+                            </span>
+                        </label>
+
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <span class="text-md flex items-center text-yellow-600" style="user-select: none;">
+                                <input type="checkbox" name="options[${optionCount}][is_active]" checked class="mr-2 border-gray-200 rounded">
+                                <i class="fa-solid fa-bell ml-1"></i>
+                                &nbsp;Activa
+                            </span>
+                        </label>
+
+                        <!-- <button type="button" class="remove_option text-red-500 text-md ml-4 cursor-pointer">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </button> -->
+                    </div>
+                `;
+
+                optionsContainer.appendChild(wrapper);
+
+                // toggle input fields
+                const select = wrapper.querySelector("select");
+                const textInput = wrapper.querySelector("textarea");
+                const imgInput = wrapper.querySelector("input[name$='[option_image]']");
+                const audioInput = wrapper.querySelector("input[name$='[option_audio]']");
+
+                const toggleInputs = () => {
+                    textInput.classList.add("hidden");
+                    imgInput.classList.add("hidden");
+                    audioInput.classList.add("hidden");
+
+                    textInput.removeAttribute("required");
+                    imgInput.removeAttribute("required");
+                    audioInput.removeAttribute("required");
+
+                    textInput.value = "";
+
+                    // Resetear file inputs y previews
+                    [imgInput, audioInput].forEach(input => {
+                        const preview = input.parentNode.querySelector(".preview-wrapper");
+                        if (preview) preview.remove();
+                        input.value = "";
+
+                        // Mostrar el ícono nuevamente si existe
+                        const iconSpan = input.parentNode.querySelector("span.absolute");
+                        if (iconSpan) iconSpan.classList.remove("hidden");
+                    });
+
+                    if (select.value === "text") {
+                        textInput.setAttribute("required", "required");
+                        textInput.classList.remove("hidden");
+                    }
+                    if (select.value === "image") {
+                        imgInput.setAttribute("required", "required");
+                        imgInput.classList.remove("hidden");
+                    }
+                    if (select.value === "audio") {
+                        audioInput.setAttribute("required", "required");
+                        audioInput.classList.remove("hidden");
+                    }
+                };
+
+                select.addEventListener("change", toggleInputs);
+                toggleInputs();
+
+                // Inicializar QuillJS
+                const quill = new Quill(`#editor-${optionCount}`, {
+                    theme: 'snow',
+                    placeholder: 'Escribe la retroalimentación para esta opción...',
+                    modules: { 
+                        toolbar: [['bold', 'italic', 'underline'], [{ 'color': [] }, { 'size': [] }], ['link']],
+                    }
+                });
+
+                quill.on('text-change', () => {
+                    const quillEditorId = quill.container.id;
+                    const idEditor = quillEditorId.split('-')[1];
+
+                    document.getElementById(`feedback-${idEditor}`).value = quill.root.innerHTML;
+                });
+
+                // eliminar opción
+                // wrapper.querySelector(".remove_option").addEventListener("click", () => {
+                //     wrapper.classList.add("opacity-0", "translate-x-5", "transition");
+                //     setTimeout(() => wrapper.remove(), 300);
+                // });
+
+                imgInput.addEventListener("change", () => previewFile(imgInput, "image"));
+                audioInput.addEventListener("change", () => previewFile(audioInput, "audio"));
+            };
+
+            const previewFile = (input, type) => {
+                // Eliminar preview previo
+                const oldPreview = input.parentNode.querySelector(".preview-wrapper");
+                if (oldPreview) oldPreview.remove();
+
+                // Buscar el span con icono (está dentro del mismo contenedor relativo)
+                const iconSpan = input.parentNode.querySelector("span.absolute");
+
+                const previewContainer = document.createElement("div");
+                previewContainer.className = "preview-wrapper mt-3 p-4 border border-gray-200 rounded shadow-md bg-white flex justify-center items-center";
+
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (type === "image") {
+                            previewContainer.innerHTML = `
+                                <div class="w-48 h-48 flex items-center justify-center bg-gray-100 overflow-hidden" style="width: 200px;">
+                                    <img src="${e.target.result}" alt="Preview"
+                                        class="max-w-full max-h-full object-contain" />
+                                </div>
+                            `;
+                        }
+                        if (type === "audio") {
+                            previewContainer.innerHTML = `
+                                <div class="w-full flex items-center justify-center bg-gray-50 p-2">
+                                    <audio controls class="w-full">
+                                        <source src="${e.target.result}" type="${file.type}">
+                                        Tu navegador no soporta el audio.
+                                    </audio>
+                                </div>
+                            `;
+                        }
+                        input.parentNode.appendChild(previewContainer);
+
+                        // Ocultar icono si existe
+                        if (iconSpan) iconSpan.classList.add("hidden");
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Si no hay archivo seleccionado, volver a mostrar icono
+                    if (iconSpan) iconSpan.classList.remove("hidden");
+                }
+            };
+
+            addOptionBtn.addEventListener("click", createOption);
+
+            document.querySelector("input[name='statement_image']")
+                ?.addEventListener("change", (e) => previewFile(e.target, "image"));
+
+            document.querySelector("input[name='statement_audio']")
+                ?.addEventListener("change", (e) => previewFile(e.target, "audio"));
+
+            // ====== PRE-CARGA ======
+            
+            // Validar que hay opciones existentes
+            let existingOptions = [];
+
+            if (`{{ options_json|length }}` !== '0') {
+                existingOptions = JSON.parse(`{{ options_json|safe }}`);
+            }
+
+            // 1. Precarga del enunciado imagen/audio
+            if ("{{ question.statement_type }}" === "image" && "{{ question.statement_image }}") {
+                const input = document.querySelector("input[name='statement_image']");
+                const previewContainer = document.createElement("div");
+                previewContainer.className = "preview-wrapper mt-3 p-4 border border-gray-200 rounded shadow-md bg-white flex justify-center items-center";
+                previewContainer.innerHTML = `
+                    <div class="w-48 h-48 flex items-center justify-center bg-gray-100 overflow-hidden" style="width: 200px;">
+                        {% if question.statement_image %}
+                            <img src="{{ question.statement_image.url }}" alt="Preview"
+                                class="max-w-full max-h-full object-contain" />
+                        {% endif %}
+                    </div>
+                `;
+                input.parentNode.appendChild(previewContainer);
+
+                // 🚩 Quitar required porque ya existe archivo
+                input.removeAttribute("required");
+
+                // 🚩 Crear input hidden para conservar archivo existente
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = "existing_statement_image";
+                hidden.value = "{{ question.statement_image.name }}";
+                input.parentNode.appendChild(hidden);
+
+                // 🚩 Si se cambia el tipo de statement, eliminar hidden + preview
+                document.getElementById("statement_type").addEventListener("change", () => {
+                    const oldHidden = input.parentNode.querySelector("input[name='existing_statement_image']");
+                    if (oldHidden) oldHidden.remove();
+                    const oldPreview = input.parentNode.querySelector(".preview-wrapper");
+                    if (oldPreview) oldPreview.remove();
+                });
+            }
+
+            if ("{{ question.statement_type }}" === "audio" && "{{ question.statement_audio }}") {
+                const input = document.querySelector("input[name='statement_audio']");
+                const previewContainer = document.createElement("div");
+                previewContainer.className = "preview-wrapper mt-3 p-4 border border-gray-200 rounded shadow-md bg-white flex justify-center items-center";
+                previewContainer.innerHTML = `
+                    <div class="w-full flex items-center justify-center bg-gray-50 p-2">
+                        {% if question.statement_audio %}
+                            <audio controls class="w-full">
+                                <source src="{{ question.statement_audio.url }}">
+                                Tu navegador no soporta el audio.
+                            </audio>
+                        {% endif %}
+                    </div>
+                `;
+                input.parentNode.appendChild(previewContainer);
+
+                // 🚩 Quitar required porque ya existe archivo
+                input.removeAttribute("required");
+
+                // 🚩 Crear input hidden para conservar archivo existente
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = "existing_statement_audio";
+                hidden.value = "{{ question.statement_audio.name }}";
+                input.parentNode.appendChild(hidden);
+
+                // 🚩 Si se cambia el tipo de statement, eliminar hidden + preview
+                document.getElementById("statement_type").addEventListener("change", () => {
+                    const oldHidden = input.parentNode.querySelector("input[name='existing_statement_audio']");
+                    if (oldHidden) oldHidden.remove();
+                    const oldPreview = input.parentNode.querySelector(".preview-wrapper");
+                    if (oldPreview) oldPreview.remove();
+                });
+            }
+
+            // 2. Precarga de opciones
+            if (existingOptions.length > 0) {
+                existingOptions.forEach(opt => {
+                    createOption(); // crea un "slot" vacío
+                    const lastOption = optionsContainer.lastElementChild;
+
+                    // Agregar hidden con ID
+                    lastOption.insertAdjacentHTML("afterbegin", `
+                        <input type="hidden" name="options[${optionCount}][id]" value="${opt.id}">
+                    `);
+
+                    // set tipo
+                    const select = lastOption.querySelector("select");
+                    select.value = opt.option_type;
+                    select.dispatchEvent(new Event("change"));
+
+                    // ====== OPCIÓN TEXTO ======
+                    if (opt.option_type === "text" && opt.option_text) {
+                        lastOption.querySelector("textarea").value = opt.option_text;
+                    }
+
+                    // ====== OPCIÓN IMAGEN ======
+                    if (opt.option_type === "image" && opt.option_image) {
+                        const input = lastOption.querySelector("input[name$='[option_image]']");
+                        const previewContainer = document.createElement("div");
+                        previewContainer.className = "preview-wrapper mt-3 p-4 border border-gray-200 rounded shadow-md bg-white flex justify-center items-center";
+                        previewContainer.innerHTML = `
+                            <div class="w-48 h-48 flex items-center justify-center bg-gray-100 overflow-hidden" style="width: 200px;">
+                                <img src="/media/${opt.option_image}" alt="Preview"
+                                    class="max-w-full max-h-full object-contain" />
+                            </div>
+                        `;
+                        input.parentNode.appendChild(previewContainer);
+
+                        // 🚩 Quitar required
+                        input.removeAttribute("required");
+
+                        // 🚩 Input hidden para mantener archivo
+                        const hidden = document.createElement("input");
+                        hidden.type = "hidden";
+                        hidden.name = `options[${optionCount}][existing_option_image]`;
+                        hidden.value = opt.option_image;
+                        input.parentNode.appendChild(hidden);
+
+                        // 🚩 Si cambia el select, eliminar hidden + preview
+                        select.addEventListener("change", () => {
+                            const oldHidden = input.parentNode.querySelector(`input[name='options[${optionCount}][existing_option_image]']`);
+                            if (oldHidden) oldHidden.remove();
+                            const oldPreview = input.parentNode.querySelector(".preview-wrapper");
+                            if (oldPreview) oldPreview.remove();
+                        });
+                    }
+
+                    // ====== OPCIÓN AUDIO ======
+                    if (opt.option_type === "audio" && opt.option_audio) {
+                        const input = lastOption.querySelector("input[name$='[option_audio]']");
+                        const previewContainer = document.createElement("div");
+                        previewContainer.className = "preview-wrapper mt-3 p-4 border border-gray-200 rounded shadow-md bg-white flex justify-center items-center";
+                        previewContainer.innerHTML = `
+                            <div class="w-full flex items-center justify-center bg-gray-50 p-2">
+                                <audio controls class="w-full">
+                                    <source src="/media/${opt.option_audio}">
+                                    Tu navegador no soporta el audio.
+                                </audio>
+                            </div>
+                        `;
+                        input.parentNode.appendChild(previewContainer);
+
+                        // 🚩 Quitar required
+                        input.removeAttribute("required");
+
+                        // 🚩 Input hidden para mantener archivo
+                        const hidden = document.createElement("input");
+                        hidden.type = "hidden";
+                        hidden.name = `options[${optionCount}][existing_option_audio]`;
+                        hidden.value = opt.option_audio;
+                        input.parentNode.appendChild(hidden);
+
+                        // 🚩 Si cambia el select, eliminar hidden + preview
+                        select.addEventListener("change", () => {
+                            const oldHidden = input.parentNode.querySelector(`input[name='options[${optionCount}][existing_option_audio]']`);
+                            if (oldHidden) oldHidden.remove();
+                            const oldPreview = input.parentNode.querySelector(".preview-wrapper");
+                            if (oldPreview) oldPreview.remove();
+                        });
+                    }
+
+                    // ====== FEEDBACK (Quill) ======
+                    const quillEditor = lastOption.querySelector(".ql-editor");
+                    const feedbackHidden = lastOption.querySelector("input[name$='[feedback]']");
+
+                    // El contenido escapado que recibes
+                    const escapedHtmlFeedback = opt.feedback;
+
+                    // Paso 1: Desescapar las entidades HTML
+                    const parserFeedback = new DOMParser();
+                    const doc = parserFeedback.parseFromString(escapedHtmlFeedback, 'text/html');
+                    const unescapedHtml = doc.documentElement.textContent;
+
+                    // Paso 2: Sanitizar el HTML para evitar XSS
+                    const feedbackRender = DOMPurify.sanitize(unescapedHtml); 
+
+                    if (feedbackRender) {
+                        quillEditor.innerHTML = feedbackRender;
+                        feedbackHidden.value = feedbackRender;
+                    }
+
+                    // ====== CHECKBOXES ======
+                    if (opt.is_correct) {
+                        lastOption.querySelector("input[name$='[is_correct]']").checked = true;
+                    }
+                    if (opt.is_active) {
+                        lastOption.querySelector("input[name$='[is_active]']").checked = true;
+                    } else {
+                        lastOption.querySelector("input[name$='[is_active]']").checked = false;
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block cancel_button %}
+    <button type="button" onclick="window.location.href='{% url 'questions_bank_questions' question_bank.id %}'" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 cursor-pointer">
+        <i class="fas fa-times"></i> Cancelar
+    </button>
+{% endblock %}
+
+{% block save_button %}
+    <button type="submit" id="saveButton" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer save-btn" data-url="{% url 'questions_save' %}">
+        <i class="fas fa-save"></i> Guardar
+    </button>
+
+    <script>
+        document.getElementById("saveButton").addEventListener("click", (e) => {
+            const feedbackInputs = document.querySelectorAll("input[name$='[feedback]']");
+            const correctChecks = document.querySelectorAll("input[name$='[is_correct]']:checked");
+            let allFilled = true;
+
+            const statementTypeSelect = document.getElementById("statement_type");
+
+            if (statementTypeSelect.value === "text" && quill_statement.getText().trim() === "") {
+                e.preventDefault();
+                alert("Por favor, completa el enunciado de la pregunta antes de guardar.");
+                return;
+            }
+
+            feedbackInputs.forEach(input => {
+                if (input.value.trim() === "" || input.value.trim() === "<p><br></p>") {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                e.preventDefault();
+                alert("Por favor, completa la retroalimentación para todas las opciones antes de guardar.");
+                return;
+            }
+
+            if (correctChecks.length !== 1 && feedbackInputs.length !== 0) {
+                e.preventDefault();
+                alert("Por favor, debe marcar una opción como correcta.");
+                return;
+            }
+
+            if (correctChecks.length === 1) {
+                const correctCheck = correctChecks[0];
+                const optionWrapper = correctCheck.closest("div.p-8");
+                if (optionWrapper) {
+                    const isActiveCheck = optionWrapper.querySelector("input[name$='[is_active]']");
+                    if (!isActiveCheck || !isActiveCheck.checked) {
+                        e.preventDefault();
+                        alert("La opción marcada como correcta debe estar activa.");
+                        return;
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

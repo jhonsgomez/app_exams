@@ -1,0 +1,55 @@
+{% extends 'base_form.html' %}
+
+{% block page_title %}Gestión | Tipos de instituciones{% endblock %}
+
+{% block back_button %}
+    <a href="{% url 'institution_types_table' %}" class="text-indigo-600 inline-flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+    </a>
+{% endblock %}
+
+{% block form_title %}
+    {% if institution_type %}
+        Editar
+    {% else %}
+        Nuevo
+    {% endif %}
+{% endblock %}
+
+{% block form_badge %}Tipo de institución{% endblock %}
+
+{% block form_fields %}
+    {% if institution_type %}
+        <input type="hidden" name="institution_type_id" id="institution_type_id" value="{{ institution_type.pk }}">
+    {% endif %}
+    <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-user"></i>
+            </span>
+            <input
+                type="text"
+                name="name"
+                id="name"
+                value="{% if institution_type %}{{ institution_type.name }}{% else %}{{ form.name.value|default_if_none:'' }}{% endif %}"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Escribe el Tipo de institución">
+        </div>
+        {% if form.name.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.name.errors.0 }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block cancel_button %}
+    <button type="button" onclick="window.location.href='{% url 'institution_types_table' %}'" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 cursor-pointer">
+        <i class="fas fa-times"></i> Cancelar
+    </button>
+{% endblock %}
+
+{% block save_button %}
+    <button type="submit" id="saveButton" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer save-btn" data-url="{% url 'institution_types_save' %}">
+        <i class="fas fa-save"></i> Guardar
+    </button>
+{% endblock %}

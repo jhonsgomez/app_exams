@@ -1,0 +1,73 @@
+{% extends 'base_table.html' %}
+
+{% block page_title %}Gestión | Preguntas{% endblock %}
+
+{% block back_button %}
+    <a href="{% url 'questions_bank_table' %}" class="inline-flex items-center text-indigo-600">
+        <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+    </a>
+{% endblock %}
+
+{% block crud_title %}Listado de {% endblock %} {% block crud_badge %}Preguntas{% endblock %}
+
+{% block create_button %}
+    <a href="{% url 'questions_create' question_bank.id %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 mr-2">
+        <i class="fas fa-plus py-1"></i>
+    </a>
+{% endblock %}
+
+{% block table_header %}
+    <div class="mb-5">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">Total de preguntas: {{ page_obj.paginator.count }}</span>
+    </div>
+    <tr class="text-gray-800 text-sm">
+        <th class="px-4 py-2">#</th>
+        <th class="px-4 py-2">Área</th>
+        <th class="px-4 py-2">Tema</th>
+        <th class="px-4 py-2">Dificultad</th>
+        <th class="px-4 py-2">Acciones</th>
+    </tr>
+{% endblock %}
+
+{% block table_body %}
+    {% for question in page_obj %}
+        <tr class="text-center">
+            <td class="px-4 py-2">{{ forloop.counter }}</td>
+            <td class="px-4 py-2">{{ question.knowledge_area.name }}</td>
+            <td class="px-4 py-2">{{ question.topic }}</td>
+            <td class="px-4 py-2">
+                {% if question.difficulty_level.name == "Básico" %}
+                    <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">Básico</span>
+                {% elif question.difficulty_level.name == "Intermedio" %}
+                    <span class="inline-block px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">Intermedio</span>
+                {% elif question.difficulty_level.name == "Avanzado" %}
+                    <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded">Avanzado</span>
+                {% else %}
+                    {{ question.difficulty_level.name }}
+                {% endif %}
+            </td>
+            <td class="px-4 py-2">
+                <a href="{% url 'questions_update' question_bank.id question.id %}" class="text-indigo-600 hover:underline"><i class="fas fa-edit"></i></a>
+                {% if question.is_active %}
+                    <form action="{% url 'questions_deactivate' question_bank.id question.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-600 hover:underline ml-2 bg-transparent border-none p-0 cursor-pointer" title="Desactivar">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    </form>
+                {% else %}
+                    <form action="{% url 'questions_activate' question_bank.id question.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="text-green-600 hover:underline ml-2 bg-transparent border-none p-0 cursor-pointer" title="Activar">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="5" class="px-4 py-2 text-center">No hay preguntas disponibles.</td>
+        </tr>
+    {% endfor %}
+{% endblock %}

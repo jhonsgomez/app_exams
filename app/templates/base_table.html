@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}{% block page_title %}{% endblock %}{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg px-10 pb-15 pt-10 mt-6">
+    <!-- Botón de regreso -->
+    <div class="mb-4">
+        {% block back_button %}
+        <a href="#" class="inline-flex items-center text-indigo-600">
+            <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+        </a>
+        {% endblock %}
+    </div>
+
+    <!-- Título del CRUD -->
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+            {% block crud_title %}{% endblock %}<span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 font-bold text-indigo-700 ring-1 ring-indigo-700/10 ring-inset uppercase shadow-sm">{% block crud_badge %}{% endblock %}</span>
+        </h2>
+    </div>
+
+    {% block extra_info %}{% endblock %}
+
+    {% if request.resolver_match.url_name != 'my_attempts' and request.resolver_match.url_name != 'exams_available' and request.resolver_match.url_name != 'exam_students' %}
+        <div class="flex justify-start items-center mb-7">
+            <div>
+                {% block create_button %}
+                <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 mr-2">
+                    <i class="fas fa-plus py-1"></i>
+                </a>
+                {% endblock %}
+            </div>
+            <form method="GET" class="flex items-center max-w-md">
+                <input type="text" name="q" placeholder="Escribe algo ..." value="{{ request.GET.q }}" class="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-r-md hover:bg-indigo-700">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    {% else %}
+        {% block create_button_extra %}{% endblock %}
+    {% endif %}
+
+    <!-- Tabla -->
+    <div class="overflow-x-auto w-full">
+        <table class="w-full table-auto border border-gray-300">
+            <thead class="bg-indigo-100 text-gray-700 text-center">
+                {% block table_header %}{% endblock %}
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% block table_body %}{% endblock %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <div class="mt-6 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+        <div class="flex space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"><i class="fas fa-chevron-left"></i></a>
+            {% endif %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"><i class="fas fa-chevron-right"></i></a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Modal de confirmación -->
+    <div id="confirmOverlay" class="fixed inset-0 backdrop-blur-sm bg-opacity-40 hidden z-50 justify-center items-center transition-opacity duration-300">
+        <div id="confirmModal" class="opacity-0 scale-95 transform transition-all duration-300 bg-white p-6 rounded-lg shadow-lg w-full max-w-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">¿Estás seguro?</h3>
+            <i class="fas fa-trash-alt text-red-600 text-3xl mb-4"></i>
+            <p class="text-gray-600 mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancelBtn" type="button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 cursor-pointer">Cancelar</button>
+                <form id="confirmForm" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block custom_js %}
+<script>
+    const overlay = document.getElementById("confirmOverlay");
+    const modal = document.getElementById("confirmModal");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const confirmForm = document.getElementById("confirmForm");
+
+    function openModal(url) {
+        confirmForm.setAttribute("action", url);
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+        setTimeout(() => {
+            overlay.classList.add("opacity-100");
+            modal.classList.remove("opacity-0", "scale-95");
+            modal.classList.add("opacity-100", "scale-100");
+        }, 10);
+    }
+
+    function closeModal() {
+        modal.classList.remove("opacity-100", "scale-100");
+        modal.classList.add("opacity-0", "scale-95");
+        overlay.classList.remove("opacity-100");
+        setTimeout(() => {
+            overlay.classList.remove("flex");
+            overlay.classList.add("hidden");
+        }, 300);
+    }
+
+    document.querySelectorAll(".delete-btn").forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            const formAction = this.getAttribute("data-url");
+            openModal(formAction);
+        });
+    });
+
+    cancelBtn.addEventListener("click", function () {
+        closeModal();
+    });
+</script>
+{% endblock %}

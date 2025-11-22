@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {{ attempt.exam.title }} - Intento #{{ attempt.attempt_number }}
+{% endblock %}
+
+{% block content %}
+  <div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header con información del intento -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ attempt.exam.title }}</h1>
+            <p class="text-sm text-gray-600">Intento #{{ attempt.attempt_number }}</p>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-gray-600">Pregunta</div>
+            <div class="text-2xl font-bold text-indigo-600">{{ question_number }} / {{ max_questions }}</div>
+          </div>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+          <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ progress_percentage }}%"></div>
+        </div>
+
+        <!-- Estadísticas actuales -->
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="text-sm text-gray-600">Correctas</div>
+            <div class="text-xl font-bold text-green-600" id="correct-count">{{ attempt.correct_answers }}</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Incorrectas</div>
+            <div class="text-xl font-bold text-red-600" id="incorrect-count">{{ attempt.incorrect_answers }}</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">Nivel</div>
+            <div class="text-xl font-bold text-indigo-600">{{ current_level.name }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Temporizador (CRÍTICO PARA SEGURIDAD) -->
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-md" id="timer-container">
+        <div class="flex items-center">
+          <i class="fas fa-clock text-red-500 text-2xl mr-3"></i>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-red-800">Tiempo restante</p>
+            <p class="text-3xl font-bold text-red-600" id="timer">{{ question.time }}s</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pregunta -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <!-- Enunciado inicial -->
+        {% if question.start_statement %}
+          <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+            <p class="text-gray-700">{{ question.start_statement }}</p>
+          </div>
+        {% endif %}
+
+        <!-- Contenido de la pregunta -->
+        <div class="mb-6 text-center">
+          {% if question.statement_type == 'text' %}
+            <div class="text-xl font-semibold text-gray-900 mb-4">{{ question.statement_text|safe }}</div>
+          {% elif question.statement_type == 'image' %}
+            <img src="{{ question.statement_image.url }}" alt="Pregunta" class="max-w-full h-auto rounded-lg shadow mb-4 mx-auto" />
+          {% elif question.statement_type == 'audio' %}
+            <audio controls class="w-full mb-4">
+              <source src="{{ question.statement_audio.url }}" type="audio/mpeg" />Tu navegador no soporta audio.
+            </audio>
+          {% endif %}
+        </div>
+
+        <!-- Enunciado final -->
+        {% if question.end_statement %}
+          <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+            <p class="text-gray-700">{{ question.end_statement }}</p>
+          </div>
+        {% endif %}
+
+        <!-- Opciones de respuesta -->
+        <form id="answer-form">
+          {% csrf_token %}
+          <input type="hidden" name="question_id" value="{{ question.id }}" />
+          <input type="hidden" name="question_shown_at" id="question_shown_at" value="" />
+
+          <div class="space-y-3">
+            {% for option in options %}
+              <div class="option-container">
+                <label class="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
+                  <input type="radio" name="option_id" value="{{ option.id }}" class="mt-1 mr-3 h-5 w-5 text-indigo-600" required />
+                  <div class="flex-1">
+                    {% if option.option_type == 'text' %}
+                      <span class="text-gray-900">{{ option.option_text }}</span>
+                    {% elif option.option_type == 'image' %}
+                      <img src="{{ option.option_image.url }}" alt="Opción" class="max-w-xs h-auto rounded" />
+                    {% elif option.option_type == 'audio' %}
+                      <audio controls class="w-full">
+                        <source src="{{ option.option_audio.url }}" type="audio/mpeg" />
+                      </audio>
+                    {% endif %}
+                  </div>
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="mt-6 flex justify-between items-center">
+            <button type="button" onclick="confirmAbandon()" class="px-6 py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 cursor-pointer"><i class="fas fa-times mr-2"></i> Abandonar</button>
+
+            <button type="submit" id="submit-btn" class="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold cursor-pointer"><i class="fas fa-check mr-2"></i> Responder</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal de retroalimentación -->
+      <div id="feedback-modal" class="hidden fixed top-0 left-0 right-0 min-h-full overflow-y-auto z-50 bg-gray-600 bg-opacity-50">
+        <div class="min-h-full flex flex-col justify-center py-10 px-4 absolute top-0">
+          <!-- modal blanco -->
+          <div class="w-full max-w-3xl mx-auto p-5 border shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+              <div id="feedback-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4"></div>
+
+              <h3 id="feedback-title" class="text-lg leading-6 font-medium text-gray-900 mb-2"></h3>
+
+              <div class="mt-2 px-7 py-3">
+                <p id="feedback-message" class="text-sm text-gray-500"></p>
+              </div>
+
+              <div class="items-center px-4 py-3">
+                <button id="feedback-next-btn" class="cursor-pointer px-4 py-3 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">Siguiente Pregunta</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript para manejo de tiempo y envío -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Variables globales
+      const questionTime = '{{ question.time }}'
+      const questionShownAt = new Date()
+      let timeRemaining = questionTime
+      let timerInterval = null
+      let timeExpired = false
+      let isSubmitting = false
+    
+      // Guardar timestamp de cuando se mostró la pregunta
+      document.getElementById('question_shown_at').value = questionShownAt.toISOString()
+    
+      // Deshabilitar botón de retroceso del navegador
+      history.pushState(null, null, location.href)
+      window.onpopstate = function () {
+        history.go(1)
+      }
+    
+      // Prevenir salida accidental
+      window.addEventListener('beforeunload', function (e) {
+        if (!isSubmitting) {
+          e.preventDefault()
+          e.returnValue = ''
+          return ''
+        }
+      })
+    
+      // Iniciar temporizador
+      startTimer()
+    
+      function startTimer() {
+        const timerDisplay = document.getElementById('timer')
+        const timerContainer = document.getElementById('timer-container')
+    
+        timerInterval = setInterval(function () {
+          timeRemaining--
+    
+          // Actualizar display
+          timerDisplay.textContent = timeRemaining + 's'
+    
+          // Cambiar color según tiempo restante
+          if (timeRemaining <= 10) {
+            timerContainer.classList.remove('bg-red-50', 'border-red-500')
+            timerContainer.classList.add('bg-red-100', 'border-red-700')
+            timerDisplay.classList.add('animate-pulse')
+          }
+    
+          // Tiempo agotado
+          if (timeRemaining <= 0) {
+            clearInterval(timerInterval)
+            timeExpired = true
+            handleTimeExpired()
+          }
+        }, 1000)
+      }
+    
+      function handleTimeExpired() {
+        const submitBtn = document.getElementById('submit-btn')
+        submitBtn.disabled = true
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed')
+    
+        // Seleccionar una opción aleatoria (o la primera)
+        const options = document.querySelectorAll('input[name="option_id"]')
+        if (options.length > 0 && !isAnyOptionSelected()) {
+          options[0].checked = true
+        }
+    
+        // Enviar automáticamente
+        setTimeout(function () {
+          submitForm()
+        }, 1000)
+      }
+    
+      function isAnyOptionSelected() {
+        const options = document.querySelectorAll('input[name="option_id"]')
+        for (let option of options) {
+          if (option.checked) return true
+        }
+        return false
+      }
+    
+      // Manejo del formulario
+      document.getElementById('answer-form').addEventListener('submit', function (e) {
+        e.preventDefault()
+    
+        if (isSubmitting) return
+    
+        // Validar que se haya seleccionado una opción
+        if (!isAnyOptionSelected()) {
+          alert('Por favor selecciona una respuesta')
+          return
+        }
+    
+        submitForm()
+      })
+    
+      function submitForm() {
+        if (isSubmitting) return
+    
+        isSubmitting = true
+        clearInterval(timerInterval)
+    
+        const form = document.getElementById('answer-form')
+        const submitBtn = document.getElementById('submit-btn')
+        const formData = new FormData(form)
+    
+        // Deshabilitar botón
+        submitBtn.disabled = true
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Procesando...'
+    
+        // Enviar respuesta vía AJAX
+        fetch('{% url "attempt_submit" attempt.id %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showFeedback(data)
+            } else {
+              alert('Error: ' + (data.error || 'Ocurrió un error al procesar la respuesta'))
+              isSubmitting = false
+              submitBtn.disabled = false
+              submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Responder'
+            }
+          })
+          .catch((error) => {
+            console.error('Error:', error)
+            alert('Error de conexión. Por favor intenta de nuevo.')
+            isSubmitting = false
+            submitBtn.disabled = false
+            submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Responder'
+          })
+      }
+    
+      function showFeedback(data) {
+        const modal = document.getElementById('feedback-modal')
+        const icon = document.getElementById('feedback-icon')
+        const title = document.getElementById('feedback-title')
+        const message = document.getElementById('feedback-message')
+        const nextBtn = document.getElementById('feedback-next-btn')
+    
+        const phrases = {
+          correct: ['¡Excelente trabajo!', '¡Sigue así!', '¡Muy bien hecho!', '¡Correcto!', '¡Buen trabajo!'],
+          incorrect: ['No te desanimes.', '¡Inténtalo de nuevo!', 'Sigue practicando.', '¡Casi lo logras!', '¡No te rindas!']
+        }
+    
+        // Seleccionar frase aleatoria junto con el nombre del estudiante
+        const studentName = '{{ request.user.first_name }}'
+        let selectedPhrase = ''
+    
+        if (data.is_correct) {
+          const phrasesArray = phrases.correct
+          selectedPhrase = phrasesArray[Math.floor(Math.random() * phrasesArray.length)]
+        } else {
+          const phrasesArray = phrases.incorrect
+          selectedPhrase = phrasesArray[Math.floor(Math.random() * phrasesArray.length)]
+        }
+    
+        // Incluir el nombre del estudiante en la frase
+        selectedPhrase = selectedPhrase + ' ' + studentName
+    
+        // Formatear la frase con HTML para resaltar el nombre
+        selectedPhraseHTML = `
+            <p>${selectedPhrase.replace(studentName, `<strong class="text-gray-600">${studentName}</strong>`)}</p>
+            `
+    
+        const options_data = data.options_data || []
+    
+        // Configurar contenido según resultado
+        if (data.is_correct) {
+          icon.innerHTML = '<i class="fas fa-check-circle text-5xl text-green-500"></i>'
+          icon.classList.add('bg-green-100')
+          title.textContent = '¡Correcto!'
+          title.classList.add('text-green-700')
+        } else {
+          icon.innerHTML = '<i class="fas fa-times-circle text-5xl text-red-500"></i>'
+          icon.classList.add('bg-red-100')
+          title.textContent = 'Incorrecto'
+          title.classList.add('text-red-700')
+        }
+    
+        // Agregar información adicional (HTML con íconos)
+        let feedbackText = `
+              <div class="space-y-3 text-left">
+              <div class="p-5 bg-gray-50 rounded-md">
+                <div class="prose text-center font-semibold text-md text-gray-500">
+                  ${selectedPhraseHTML}
+                  <br>
+                  <div class="flex flex-col sm:flex-row sm:items-center items-start gap-2 w-full">
+                    <span class="text-gray-600 font-bold mr-1">Nota: </span>
+                    <div class="text-left">${!data.time_violation ? data.feedback : 'Opción no válida debido a la violación de tiempo.'}</div>
+                  </div>
+                </div>
+              </div>`
+    
+        if (data.time_violation) {
+          feedbackText += `
+                  <p class="text-sm text-red-600 flex items-center">
+                  <span><i class="fas fa-exclamation-triangle mr-2"></i> Advertencia: Se excedió el tiempo permitido.</span>
+                  </p>`
+        }
+    
+        feedbackText += `
+                <p class="text-md font-semibold text-gray-800 mb-2"><i class="fas fa-info-circle mr-2 text-indigo-600"></i> Retroalimentación de las otras opciones:</p>`
+    
+        // Agregar feedback de las opciones no seleccionadas
+        options_data.forEach(function (option) {
+          feedbackText += `
+                <div class="p-4 bg-gray-100 rounded-md">
+                  <h4 class="font-semibold text-gray-800 flex items-center mb-2">
+                  ${option.type === 'text' ? '<span class="font-normal text-gray-700">' + option.statement + '</span>' : option.type === 'image' ? '<img src="' + option.statement + '" alt="Opción" class="max-w-xs h-auto rounded mx-auto" />' : option.type === 'audio' ? '<audio controls class="w-full max-w-xs mx-auto"><source src="' + option.statement + '" type="audio/mpeg" />Tu navegador no soporta audio.</audio>' : ''}
+                  </h4>
+                  <div class="prose text-gray-700 text-left">
+                  <div class="flex flex-col sm:flex-row sm:items-center items-start gap-2 w-full">
+                    <span class="text-gray-600 font-bold mr-1">Observaciones: </span>${option.feedback}
+                  </div>
+                  </div>
+                </div>`
+        })
+    
+        feedbackText += `
+                <div class="mt-2 p-3 bg-gray-50 rounded-md">
+                  <h4 class="font-semibold text-gray-800 flex items-center">
+              <i class="fas fa-chart-bar mr-2 text-indigo-600"></i> Estadísticas actuales
+                  </h4>
+                  <ul class=" mt-3 space-y-1 text-sm text-gray-700">
+              <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Correctas: <strong>${data.correct_answers}</strong></li>
+              <li><i class="fas fa-times-circle text-red-500 mr-2"></i>Incorrectas: <strong>${data.incorrect_answers}</strong></li>
+              <li><i class="fas fa-percentage text-indigo-500 mr-2"></i>Precisión: <strong>${data.accuracy}%</strong></li>
+                  </ul>
+                </div>
+              </div>`
+    
+        message.innerHTML = DOMPurify ? DOMPurify.sanitize(feedbackText) : 'No se pudo cargar el mensaje de retroalimentación.'
+    
+        // Configurar botón de siguiente
+        if (data.decision === 'continue') {
+          nextBtn.innerHTML = '<i class="fas fa-chevron-right mr-2"></i><span>Siguiente Pregunta</span>'
+          nextBtn.onclick = function () {
+            window.location.reload()
+          }
+        } else {
+          // Examen finalizado
+          nextBtn.innerHTML = '<i class="fas fa-flag-checkered mr-2"></i><span>Ver Resultados</span>'
+          nextBtn.onclick = function () {
+            window.location.href = data.redirect_url
+          }
+        }
+    
+        // Mostrar modal
+        modal.classList.remove('hidden')
+        modal.classList.add('flex', 'justify-center', 'items-center')
+      }
+    })
+    
+    function confirmAbandon() {
+      if (confirm('¿Estás seguro de que deseas abandonar este intento? No podrás continuarlo después.')) {
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = '{% url "attempt_abandon" attempt.id %}'
+    
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value
+        const csrfInput = document.createElement('input')
+        csrfInput.type = 'hidden'
+        csrfInput.name = 'csrfmiddlewaretoken'
+        csrfInput.value = csrfToken
+    
+        form.appendChild(csrfInput)
+        document.body.appendChild(form)
+        form.submit()
+      }
+    }
+  </script>
+{% endblock %}

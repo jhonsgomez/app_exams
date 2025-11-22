@@ -1,0 +1,46 @@
+{% extends 'base_table.html' %}
+
+{% block page_title %}Gestión | Programas Académicos{% endblock %}
+
+{% block back_button %}
+    <a href="{% url 'dashboard' %}" class="inline-flex items-center text-indigo-600">
+        <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+    </a>
+{% endblock %}
+
+{% block crud_title %}Listado de {% endblock %} {% block crud_badge %}Programas Académicos{% endblock %}
+
+{% block create_button %}
+    <a href="{% url 'academic_departments_create' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 mr-2">
+        <i class="fas fa-plus py-1"></i>
+    </a>
+{% endblock %}
+
+{% block table_header %}
+    <tr class="text-gray-800 text-sm">
+        <th class="px-4 py-2">#</th>
+        <th class="px-4 py-2">Nombre</th>
+        <th class="px-4 py-2">Representante</th>
+        <th class="px-4 py-2">Institución</th>
+        <th class="px-4 py-2">Acciones</th>
+    </tr>
+{% endblock %}
+
+{% block table_body %}
+    {% for academic_department in page_obj %}
+        <tr class="text-center">
+            <td class="px-4 py-2">{{ forloop.counter }}</td>
+            <td class="px-4 py-2 text-left">{{ academic_department.name }}</td>
+            <td class="px-4 py-2">{{ academic_department.representative.name }}</td>
+            <td class="px-4 py-2">{{ academic_department.institution.name }}</td>
+            <td class="px-4 py-2">
+                <a href="{% url 'academic_departments_update' academic_department.id %}" class="text-indigo-600 hover:underline"><i class="fas fa-edit"></i></a>
+                <a href="#" class="text-red-600 hover:underline ml-2"><i class="fas fa-trash delete-btn" data-url="{% url 'academic_departments_delete' academic_department.id %}"></i></a>
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="5" class="px-4 py-2 text-center">No hay programas académicos disponibles.</td>
+        </tr>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base_table.html' %}
+{% load tz %}
+
+{% block page_title %}
+  Exámenes Disponibles
+{% endblock %}
+
+{% block back_button %}
+  <a href="{% url 'dashboard' %}" class="inline-flex items-center text-indigo-600"><i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Volver</span></a>
+{% endblock %}
+
+{% block crud_title %}
+  Exámenes
+{% endblock %} {% block crud_badge %}
+  Disponibles
+{% endblock %}
+
+{% block create_button_extra %}
+  <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-blue-800">¿Qué es el Test Secuencial de Razón de Probabilidad (SPRT)?</h3>
+        <div class="mt-2 text-sm text-blue-700">
+          <p>Es un método estadístico utilizado para evaluar la competencia de un estudiante mediante un número mínimo de preguntas.</p>
+          <p>Este test consiste en realizar una serie de preguntas secuenciales para determinar si el estudiante cumple con los criterios de competencia establecidos. Estos criterios permiten tomar decisiones rápidas y precisas sobre la competencia del estudiante.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="{% url 'my_attempts' request.user.id %}" class="inline-flex items-center px-4 py-3 mb-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 mr-2"><i class="fas fa-history mr-2"></i> Mi Historial</a>
+{% endblock %}
+
+{% block table_header %}
+  <tr class="text-gray-800 text-sm">
+    <th class="px-4 py-2">Examen</th>
+    <th class="px-4 py-2">Periodo</th>
+    <th class="px-4 py-2">Intentos</th>
+    <th class="px-4 py-2">Estado</th>
+    <th class="px-4 py-2">Acciones</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for data in page_obj %}
+    <tr class="text-center">
+      <td class="px-4 py-2 text-left">
+        <div class="font-semibold">{{ data.exam.title }}</div>
+        <div class="text-sm text-gray-600">{{ data.exam.description|truncatewords:10 }}</div>
+        <div class="text-sm text-gray-600 mt-1">
+          <span class="font-semibold">Preguntas Máx:</span> {{ data.exam.max_questions }}
+        </div>
+      </td>
+      <td class="px-4 py-2 text-sm">
+        {{ data.exam.start_date|date:'d/m/Y H:i' }}<br />
+        {{ data.exam.end_date|date:'d/m/Y H:i' }}
+      </td>
+      <td class="px-4 py-2">
+        <span class="inline-block px-2 py-1 text-xs font-semibold rounded
+                    {% if data.attempts_remaining > 0 %}
+            
+            bg-blue-100 text-blue-800
+
+          {% else %}
+            
+            bg-red-100 text-red-800
+
+          {% endif %}">
+          {{ data.attempts_used }} / {{ data.exam.max_attempts }}
+        </span>
+      </td>
+      <td class="px-4 py-2">
+        {% if data.in_progress_attempt %}
+          <span class="inline-block px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">En Progreso</span>
+        {% elif data.last_attempt %}
+          {% if data.last_attempt.status == 'approved' %}
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">Aprobado</span>
+          {% elif data.last_attempt.status == 'failed' %}
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded">Reprobado</span>
+          {% elif data.last_attempt.status == 'abandoned' %}
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded">Abandonado</span>
+          {% endif %}
+        {% else %}
+          <span class="inline-block px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded">Sin intentos</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-2">
+        {% if data.in_progress_attempt %}
+          <a href="{% url 'attempt_take' data.in_progress_attempt.id %}" class="inline-flex items-center px-3 py-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"><i class="fas fa-play"></i></a>
+        {% elif data.can_attempt %}
+          <form action="{% url 'attempt_start' data.exam.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="cursor-pointer inline-flex items-center px-3 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-play"></i></button>
+          </form>
+        {% else %}
+          <div class="inline-flex items-center px-3 py-3 text-red-600 rounded-md border border-gray-300 shadow">
+            <i class="fas fa-ban"></i>
+          </div>
+        {% endif %}
+
+        {% if data.last_attempt %}
+          <a href="{% url 'attempt_results' data.last_attempt.id data.last_attempt.student.id %}" class="inline-flex items-center px-3 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 mt-2 md:mt-2 lg:mt-0"><i class="fas fa-chart-line"></i></a>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="6" class="px-4 py-2 text-center">No hay exámenes disponibles en este momento.</td>
+    </tr>
+  {% endfor %}
+{% endblock %}

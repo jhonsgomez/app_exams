@@ -1,0 +1,274 @@
+{% extends 'base_form.html' %}
+
+{% block page_title %}Gestión | Exámenes{% endblock %}
+
+{% block back_button %}
+    <a href="{% url 'exams_table' %}" class="text-indigo-600 inline-flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+    </a>
+{% endblock %}
+
+{% block form_title %}
+    {% if exam %}
+        Editar
+    {% else %}
+        Nuevo
+    {% endif %}
+{% endblock %}
+
+{% block form_badge %}Examen{% endblock %}
+
+{% block form_fields %}
+    {% if exam %}
+        <input type="hidden" name="exam_id" id="exam_id" value="{{ exam.pk }}">
+    {% endif %}
+
+    <hr class="mt-8 border-t border-gray-400">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-book"></i>
+                </span>
+                <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    value="{% if exam %}{{ exam.title }}{% else %}{{ form.title.value|default_if_none:'' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Escribe el título del Examen"
+                    required>
+            </div>
+            {% if form.title.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="attempts" class="block text-sm font-medium text-gray-700 mb-1">Número de Intentos</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-repeat"></i>
+                </span>
+                <input
+                    type="number"
+                    name="attempts"
+                    id="attempts"
+                    min="1"
+                    max="20"
+                    value="{% if exam %}{{ exam.max_attempts }}{% else %}{{ form.attempts.value|default_if_none:'1' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Número de intentos permitidos"
+                    required>
+            </div>
+            {% if form.attempts.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.attempts.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </span>
+                <input
+                    type="datetime-local"
+                    name="start_date"
+                    id="start_date"
+                    value="{% if exam and exam.start_date %}{{ exam.start_date|date:'Y-m-d\\TH:i' }}{% else %}{{ form.start_date.value|default_if_none:'' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Selecciona la fecha y hora de inicio"
+                    required>
+            </div>
+            {% if form.start_date.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </span>
+                <input
+                    type="datetime-local"
+                    name="end_date"
+                    id="end_date"
+                    value="{% if exam and exam.end_date %}{{ exam.end_date|date:'Y-m-d\\TH:i' }}{% else %}{{ form.end_date.value|default_if_none:'' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Selecciona la fecha y hora de fin"
+                    required>
+            </div>
+            {% if form.end_date.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.end_date.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-align-left"></i>
+                </span>
+                <textarea
+                    name="description"
+                    id="description"
+                    rows="3"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Escribe una descripción para el Examen"
+                    required
+                    >{% if exam %}{{ exam.description }}{% else %}{{ form.description.value|default_if_none:'' }}{% endif %}</textarea>
+            </div>
+            {% if form.description.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="max_questions" class="block text-sm font-medium text-gray-700 mb-1">Preguntas máximas</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-question"></i>
+                </span>
+                <input
+                    type="number"
+                    name="max_questions"
+                    id="max_questions"
+                    min="1"
+                    max="{{ total_available_questions }}"
+                    value="{% if exam %}{{ exam.max_questions }}{% else %}{{ form.max_questions.value|default_if_none:'1' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Número máximo de preguntas a seleccionar"
+                    required>
+            </div>
+            {% if form.max_questions.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.max_questions.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        {% if user.role.name == 'super_admin' %}
+            <div>
+                <label for="institution" class="block text-sm font-medium text-gray-700 mb-1">Institución</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                        <i class="fa-solid fa-building"></i>
+                    </span>
+                    <select
+                        name="institution"
+                        id="institution"
+                        required
+                        class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Selecciona una institución</option>
+                        {% for institution in institutions %}
+                            <option value="{{ institution.pk }}" {% if exam and exam.institution.pk == institution.pk %}selected{% elif form.institution.value == institution.pk|stringformat:"s" %}selected{% endif %}>{{ institution.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if form.institution.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.institution.errors.0 }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <hr class="mt-10 border-t border-gray-400">
+
+    <div class="mt-6">
+        <label for="question_banks" class="block text-sm font-medium text-gray-700 mb-2">
+            Bancos de Preguntas
+        </label>
+        <p class="text-gray-500 text-xs mt-3 mb-4">Selecciona los bancos de preguntas que deseas incluir en el examen.</p>
+        <div class="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full mb-4">
+           <b>Total de preguntas disponibles:</b>  {{ total_available_questions }}
+        </div>
+        <div class="overflow-y-auto border border-gray-300 rounded-md p-4" style="height: 150px; user-select: none;">
+            {% for bank in question_banks %}
+                <div class="flex items-center mb-2">
+                    <input 
+                        type="checkbox" 
+                        id="bank_{{ bank.pk }}" 
+                        name="question_banks" 
+                        value="{{ bank.pk }}"
+                        {% if exam and bank in exam.question_banks.all %}checked{% endif %}
+                        class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <label for="bank_{{ bank.pk }}" class="ml-2 text-sm text-gray-700 cursor-pointer flex-1 flex items-center justify-between text-center">
+                        <span class="truncate mr-4">{{ bank.name }}</span>
+                        <span class="flex items-center space-x-2">
+                            <span title="Preguntas básicas" class="inline-flex items-center text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                Básicas: {{ bank.total_questions_basics }}
+                            </span>
+                            <span title="Preguntas intermedias" class="inline-flex items-center text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                Intermedias: {{ bank.total_questions_intermediate }}
+                            </span>
+                            <span title="Preguntas avanzadas" class="inline-flex items-center text-xs font-semibold bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                                Avanzadas: {{ bank.total_questions_advanced }}
+                            </span>
+                            <span title="Total de preguntas" class="inline-flex items-center text-xs font-semibold bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
+                                Total: {{ bank.total_questions_basics|add:bank.total_questions_intermediate|add:bank.total_questions_advanced }}
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            {% empty %}
+                <p class="text-gray-500 text-sm">No hay bancos de preguntas disponibles.</p>
+            {% endfor %}
+        </div>
+        <div id="selectedBanksInfo" class="mt-4 inline-block bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-full"></div>
+    </div>
+
+    <hr class="mt-10 border-t border-gray-400">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('input[name="question_banks"]');
+            const selectedBanksInfo = document.getElementById('selectedBanksInfo');
+
+            function updateSelectedBanksInfo() {
+                let totalSelected = 0;
+                let totalQuestions = 0;
+
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        totalSelected += 1;
+                        const label = checkbox.nextElementSibling;
+                        const totalSpan = label.querySelector('span[title="Total de preguntas"]');
+                        if (totalSpan) {
+                            const totalText = totalSpan.textContent;
+                            const match = totalText.match(/Total:\s+(\d+)/);
+                            if (match) {
+                                totalQuestions += parseInt(match[1], 10);
+                            }
+                        }
+                    }
+                });
+
+                selectedBanksInfo.innerHTML = `
+                    <b>Total de preguntas seleccionadas:</b> ${totalQuestions}
+                `;
+            }
+
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectedBanksInfo);
+            });
+
+            // Initial update
+            updateSelectedBanksInfo();
+        });
+    </script>
+{% endblock %}
+
+{% block cancel_button %}
+    <button type="button" onclick="window.location.href='{% url 'exams_table' %}'" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 cursor-pointer">
+        <i class="fas fa-times"></i> Cancelar
+    </button>
+{% endblock %}
+
+{% block save_button %}
+    <button type="submit" id="saveButton" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer save-btn" data-url="{% url 'exams_save' %}">
+        <i class="fas fa-save"></i> Guardar
+    </button>
+{% endblock %}

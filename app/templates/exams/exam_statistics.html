@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Estadísticas - {{ exam.title }}
+{% endblock %}
+
+{% block content %}
+  <div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-6">
+        <a href="{% url 'exams_table' %}" class="inline-flex items-center text-indigo-600 hover:text-indigo-800"><i class="fas fa-arrow-left mr-2"></i> Volver</a>
+      </div>
+
+      <!-- Header -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">{{ exam.title }}</h1>
+        <p class="text-gray-600">Estadísticas generales del examen</p>
+      </div>
+
+      <!-- Tarjetas de estadísticas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white shadow rounded-lg p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 p-3 bg-blue-100 rounded-full">
+              <i class="fas fa-users text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-gray-600">Total Intentos</p>
+              <p class="text-2xl font-bold text-gray-900">{{ total_attempts }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 p-3 bg-green-100 rounded-full">
+              <i class="fas fa-check-circle text-green-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-gray-600">Aprobados</p>
+              <p class="text-2xl font-bold text-green-600">{{ approved_count }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 p-3 bg-red-100 rounded-full">
+              <i class="fas fa-times-circle text-red-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-gray-600">Reprobados</p>
+              <p class="text-2xl font-bold text-red-600">{{ failed_count }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 p-3 bg-indigo-100 rounded-full">
+              <i class="fas fa-percentage text-indigo-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm text-gray-600">Tasa de Aprobación</p>
+              <p class="text-2xl font-bold text-indigo-600">{{ approval_rate }}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segunda fila de estadísticas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Promedios</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">Preguntas por intento:</span>
+              <span class="font-bold text-gray-900">{{ avg_questions }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">Precisión promedio:</span>
+              <span class="font-bold text-indigo-600">{{ avg_accuracy }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Estados</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-yellow-600"><i class="fas fa-clock mr-2"></i>En progreso:</span>
+              <span class="font-bold">{{ in_progress_count }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600"><i class="fas fa-ban mr-2"></i>Abandonados:</span>
+              <span class="font-bold">{{ abandoned_count }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Distribución</h3>
+          <div class="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+            {% if total_attempts > 0 %}
+              <div class="flex h-full">
+                <div class="bg-green-500 h-full" style="width: {% widthratio approved_count total_attempts 100 %}%"></div>
+                <div class="bg-red-500 h-full" style="width: {% widthratio failed_count total_attempts 100 %}%"></div>
+                <div class="bg-yellow-500 h-full" style="width: {% widthratio in_progress_count total_attempts 100 %}%"></div>
+                <div class="bg-gray-400 h-full" style="width: {% widthratio abandoned_count total_attempts 100 %}%"></div>
+              </div>
+            {% endif %}
+          </div>
+          <div class="flex flex-col space-y-2 mt-4">
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-green-600 rounded-sm mr-2 inline-block"></span>
+                <span class="text-xs text-green-600">Aprobados</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-red-600 rounded-sm mr-2 inline-block"></span>
+                <span class="text-xs text-red-600">Reprobados</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-yellow-500 rounded-sm mr-2 inline-block"></span>
+                <span class="text-xs text-yellow-600">En progreso</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-gray-400 rounded-sm mr-2 inline-block"></span>
+                <span class="text-xs text-gray-600">Abandonados</span>
+              </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- Intentos recientes -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          <i class="fas fa-history text-indigo-600 mr-2"></i>
+          Últimos 10 Intentos
+        </h3>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estudiante</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Intento</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Preguntas</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Precisión</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for attempt in recent_attempts %}
+                <tr>
+                  <td class="px-4 py-3 text-sm">{{ attempt.student|default:'No disponible' }}</td>
+                  <td class="px-4 py-3 text-sm font-medium">#{{ attempt.attempt_number }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-600">{{ attempt.started_at|date:'d/m/Y H:i' }}</td>
+                  <td class="px-4 py-3 text-center text-sm">{{ attempt.total_questions }}</td>
+                  <td class="px-4 py-3 text-center text-sm font-medium text-indigo-600">{{ attempt.get_accuracy|floatformat:1 }}%</td>
+                  <td class="px-4 py-3 text-center">
+                    {% if attempt.status == 'approved' %}
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Aprobado</span>
+                    {% elif attempt.status == 'failed' %}
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Reprobado</span>
+                    {% elif attempt.status == 'in_progress' %}
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">En Progreso</span>
+                    {% else %}
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">Abandonado</span>
+                    {% endif %}
+                  </td>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="px-4 py-8 text-center text-gray-500">No hay intentos registrados todavía.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

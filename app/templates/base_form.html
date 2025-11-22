@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}{% block page_title %}{% endblock %}{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg {% if request.resolver_match.url_name == 'questions_create' or request.resolver_match.url_name == 'questions_update' %} max-w-4xl p-10 {% else %} max-w-3xl p-10 {% endif %} mx-auto mt-6">
+    <!-- Botón de regreso -->
+    <div class="mb-4">
+        {% block back_button %}
+        <a href="#" class="text-indigo-600 hover:underline inline-flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+        </a>
+        {% endblock %}
+    </div>
+
+    <!-- Título del formulario -->
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        {% block form_title %}{% endblock %} <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 font-bold text-indigo-700 ring-1 ring-indigo-700/10 ring-inset uppercase shadow-sm">{% block form_badge %}{% endblock %}</span>
+    </h2>
+
+    <!-- Formulario -->
+    <form id="saveForm" method="POST" class="space-y-6" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% block form_fields %}{% endblock %}
+
+        <div class="text-right">
+            {% block cancel_button %}
+                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 cursor-pointer">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            {% endblock %}
+            {% block save_button %}
+                <button type="submit" id="saveButton" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer save-btn">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            {% endblock %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block custom_js %}
+
+<script>
+    const saveForm = document.getElementById('saveForm');
+
+    saveForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const saveButton = document.getElementById('saveButton');
+        const formAction = saveButton.getAttribute('data-url');
+        saveForm.action = formAction;
+        saveForm.submit();
+    });
+    
+</script>
+
+{% endblock %}

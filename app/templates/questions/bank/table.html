@@ -1,0 +1,64 @@
+{% extends 'base_table.html' %}
+
+{% block page_title %}
+  Gestión | Banco de Preguntas
+{% endblock %}
+
+{% block back_button %}
+  <a href="{% url 'dashboard' %}" class="inline-flex items-center text-indigo-600"><i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span></a>
+{% endblock %}
+
+{% block crud_title %}
+  Listado de
+{% endblock %} {% block crud_badge %}
+  Bancos de Preguntas
+{% endblock %}
+
+{% block create_button %}
+  <a href="{% url 'questions_bank_create' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 mr-2"><i class="fas fa-plus py-1"></i></a>
+{% endblock %}
+
+{% block table_header %}
+  <tr class="text-gray-800 text-sm">
+    <th class="px-4 py-2">#</th>
+    <th class="px-4 py-2">Nombre</th>
+    <th class="px-4 py-2">Descripción</th>
+    <th class="px-4 py-2">Total de Preguntas</th>
+    <th class="px-4 py-2">Acciones</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for bank in page_obj %}
+    <tr class="text-center">
+      <td class="px-4 py-2">{{ forloop.counter }}</td>
+      <td class="px-4 py-2">{{ bank.name }}</td>
+      <td class="px-4 py-2">{{ bank.description }}</td>
+      <td class="px-4 py-2 text-left">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">{{ bank.total_questions_basics }} Básicas</span><br>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">{{ bank.total_questions_intermediate }} Intermedias</span><br>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">{{ bank.total_questions_advanced }} Avanzadas</span><br>
+        <span class="text-gray-600 text-xs font-bold">Total: </span><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">{{ bank.total_questions }} Preguntas</span>
+      </td>
+      <td class="px-4 py-2">
+        <a href="{% url 'questions_bank_update' bank.id %}" class="text-indigo-600 hover:underline"><i class="fas fa-edit"></i></a>
+        <a href="{% url 'questions_bank_questions' bank.id %}" class="text-gray-500 hover:underline ml-2"><i class="fas fa-eye"></i></a>
+        {% if bank.is_active %}
+          <form action="{% url 'questions_bank_deactivate' bank.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="text-red-600 hover:underline ml-2 bg-transparent border-none p-0 cursor-pointer" title="Desactivar"><i class="fas fa-ban"></i></button>
+          </form>
+        {% else %}
+          <form action="{% url 'questions_bank_activate' bank.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="text-green-600 hover:underline ml-2 bg-transparent border-none p-0 cursor-pointer" title="Activar"><i class="fas fa-check"></i></button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="4" class="px-4 py-2 text-center">No hay bancos de preguntas disponibles.</td>
+    </tr>
+  {% endfor %}
+{% endblock %}

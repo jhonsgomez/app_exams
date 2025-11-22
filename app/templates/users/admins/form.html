@@ -1,0 +1,130 @@
+{% extends 'base_form.html' %}
+
+{% block page_title %}Gestión | Administradores{% endblock %}
+
+{% block back_button %}
+    <a href="{% url 'admins_table' %}" class="text-indigo-600 inline-flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Regresar</span>
+    </a>
+{% endblock %}
+
+{% block form_title %}
+    {% if admin %}
+        Editar
+    {% else %}
+        Nuevo
+    {% endif %}
+{% endblock %}
+
+{% block form_badge %}Administrador{% endblock %}
+
+{% block form_fields %}
+    {% if admin %}
+        <input type="hidden" name="admin_id" id="admin_id" value="{{ admin.pk }}">
+    {% endif %}
+
+    <div>
+        <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-user"></i>
+            </span>
+            <input
+                type="text"
+                name="first_name"
+                id="first_name"
+                value="{% if admin %}{{ admin.first_name }}{% else %}{{ form.first_name.value|default_if_none:'' }}{% endif %}"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Escribe los nombres del usuario">
+        </div>
+        {% if form.first_name.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.first_name.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-user"></i>
+            </span>
+            <input
+                type="text"
+                name="last_name"
+                id="last_name"
+                value="{% if admin %}{{ admin.last_name }}{% else %}{{ form.last_name.value|default_if_none:'' }}{% endif %}"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Escribe los apellidos del usuario">
+        </div>
+        {% if form.last_name.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.last_name.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="institution" class="block text-sm font-medium text-gray-700 mb-1">Institución</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-building"></i>
+            </span>
+            <select name="institution" id="institution" class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">Seleccione una institución</option>
+                {% for institution in institutions %}
+                    <option value="{{ institution.id }}" {% if admin and institution.id == admin.institution.id %}selected{% endif %}>{{ institution.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if form.institution.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.institution.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-envelope"></i>
+            </span>
+            <input
+                type="email"
+                name="email"
+                id="email"
+                value="{% if admin %}{{ admin.email }}{% else %}{{ form.email.value|default_if_none:'' }}{% endif %}"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Escribe el correo electrónico">
+        </div>
+        {% if form.email.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                <i class="fa-solid fa-lock"></i>
+            </span>
+            <input
+                type="password"
+                name="password"
+                id="password"
+                class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="************">
+        </div>
+        {% if form.password.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.password.errors.0 }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block cancel_button %}
+    <button type="button" onclick="window.location.href='{% url 'admins_table' %}'" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 cursor-pointer">
+        <i class="fas fa-times"></i> Cancelar
+    </button>
+{% endblock %}
+
+{% block save_button %}
+    <button type="submit" id="saveButton" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer save-btn" data-url="{% url 'admins_save' %}">
+        <i class="fas fa-save"></i> Guardar
+    </button>
+{% endblock %}

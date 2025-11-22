@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Ingresar | App de Exámenes{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow mt-8">
+    <h2 class="text-2xl font-bold mb-6 text-center mt-5">Iniciar Sesión</h2>
+    <form method="POST" action="{% url 'auth_login' %}" class="p-4">
+        {% csrf_token %}
+
+        <!-- Campo de Correo Electrónico -->
+        <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-envelope"></i>
+                </span>
+                <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    value="{{ form.email.value|default_if_none:'' }}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Correo Electrónico"
+                    required
+                >
+            </div>
+            {% if form.email.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Campo de Contraseña -->
+        <div class="mb-6">
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-lock"></i>
+                </span>
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="********"
+                    required
+                >
+            </div>
+            {% if form.password.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.password.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Botón de Iniciar Sesión -->
+        <div class="text-center mt-8">
+            <button
+                type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded cursor-pointer">
+                <i class="fa-solid fa-right-to-bracket mr-2"></i> Iniciar Sesión
+            </button>
+        </div>
+    </form>
+
+    <!-- Enlace para registrarse -->
+    <p class="text-sm text-center mt-4 mb-6">
+        ¿No tiene cuenta?
+        <a href="{% url 'auth_register' %}" class="text-indigo-600 hover:underline">Regístrese aquí</a>
+    </p>
+</div>
+{% endblock %}

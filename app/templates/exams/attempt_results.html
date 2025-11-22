@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Resultados - {{ attempt.exam.title }}{% endblock %}
+
+{% block content %}
+  <div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="mb-6">
+        <a href="{% if user.role.name == 'admin' or user.role.name == 'super_admin' %}{% url 'exam_students' attempt.exam.id %}{% else %}{% url 'exams_available' %}{% endif %}" class="inline-flex items-center text-indigo-600 hover:text-indigo-800"><i class="fas fa-arrow-left mr-2"></i> Volver</a>
+      </div>
+
+      <!-- Resultado principal -->
+      <div class="bg-white shadow-lg rounded-lg p-8 mb-6 text-center">
+        <div class="mb-4">
+          {% if attempt.status == 'approved' %}
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-4">
+              <i class="fas fa-check-circle text-6xl text-green-500"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-green-700 mb-2">¡APROBADO!</h1>
+          {% elif attempt.status == 'failed' %}
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-red-100 rounded-full mb-4">
+              <i class="fas fa-times-circle text-6xl text-red-500"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-red-700 mb-2">REPROBADO</h1>
+          {% else %}
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-4">
+              <i class="fas fa-question-circle text-6xl text-gray-500"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-700 mb-2">{{ attempt.get_status_display|upper }}</h1>
+          {% endif %}
+        </div>
+
+        <p class="text-xl text-gray-700 mb-2">{{ attempt.exam.title }}</p>
+        <p class="text-gray-600">Intento #{{ attempt.attempt_number }}</p>
+
+        <div class="mt-6 flex justify-center items-center space-x-6">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-gray-900">{{ attempt.total_questions }}</div>
+            <div class="text-sm text-gray-600">Preguntas</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-green-600">{{ attempt.correct_answers }}</div>
+            <div class="text-sm text-gray-600">Correctas</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-red-600">{{ attempt.incorrect_answers }}</div>
+            <div class="text-sm text-gray-600">Incorrectas</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-indigo-600">{{ attempt.get_accuracy|floatformat:1 }}%</div>
+            <div class="text-sm text-gray-600">Precisión</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información adicional -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Tiempos -->
+        <div class="bg-white shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-clock text-indigo-600 mr-2"></i> Información Temporal</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Inicio:</span>
+              <span class="font-medium">{{ attempt.started_at|date:'d/m/Y H:i' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Finalización:</span>
+              <span class="font-medium">{{ attempt.completed_at|date:'d/m/Y H:i' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Duración total:</span>
+              <span class="font-medium">{{ attempt.get_duration }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Tiempo invertido:</span>
+              <span class="font-medium">{{ total_time_spent }} segundos</span>
+            </div>
+            {% if time_violations_count > 0 %}
+              <div class="flex justify-between text-red-600">
+                <span>Violaciones de tiempo:</span>
+                <span class="font-medium">{{ time_violations_count }}</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Análisis SPRT -->
+        <div class="bg-white shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-chart-line text-indigo-600 mr-2"></i> Análisis SPRT</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Índice S final:</span>
+              <span class="font-medium font-mono">{{ attempt.s_index|floatformat:4 }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Límite inferior:</span>
+              <span class="font-medium font-mono text-green-600">{{ lower_limit }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Límite superior:</span>
+              <span class="font-medium font-mono text-red-600">{{ upper_limit }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Consistencia:</span>
+              <span class="font-medium">
+                {% if attempt.consistency_feedback == 'positive' %}
+                  <span class="text-green-600"><i class="fas fa-check-circle"></i> Consistente Positivo</span>
+                {% elif attempt.consistency_feedback == 'negative' %}
+                  <span class="text-red-600"><i class="fas fa-times-circle"></i> Consistente Negativo</span>
+                {% elif attempt.consistency_feedback == 'inconsistent' %}
+                  <span class="text-yellow-600"><i class="fas fa-exclamation-circle"></i> Inconsistente</span>
+                {% else %}
+                  <span class="text-gray-600"><i class="fas fa-ban"></i> Insuficientes datos</span>
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progreso por nivel de dificultad -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-layer-group text-indigo-600 mr-2"></i> Desempeño por Nivel de Dificultad</h3>
+
+        <div class="space-y-4">
+          {% for progress in level_progress %}
+            <div class="border border-gray-200 rounded-lg p-4">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-semibold text-gray-900">{{ progress.difficulty_level.name }}</h4>
+                <span class="px-3 py-1 rounded-full text-sm font-medium
+                            {% if progress.passed_to_next_level %}
+                    bg-green-100 text-green-800
+
+                  {% elif progress.is_completed %}
+                    bg-blue-100 text-blue-800
+
+                  {% else %}
+                    bg-gray-100 text-gray-800
+                  {% endif %}">
+                  {% if progress.passed_to_next_level %}
+                    ✓ Avanzó al siguiente
+                  {% elif progress.is_completed %}
+                    Completado
+                  {% else %}
+                    En progreso
+                  {% endif %}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-4 gap-4 mt-3">
+                <div>
+                  <div class="text-sm text-gray-600">Preguntas</div>
+                  <div class="text-xl font-bold">{{ progress.questions_answered }}</div>
+                </div>
+                <div>
+                  <div class="text-sm text-gray-600">Correctas</div>
+                  <div class="text-xl font-bold text-green-600">{{ progress.correct_count }}</div>
+                </div>
+                <div>
+                  <div class="text-sm text-gray-600">Incorrectas</div>
+                  <div class="text-xl font-bold text-red-600">{{ progress.incorrect_count }}</div>
+                </div>
+                <div>
+                  <div class="text-sm text-gray-600">Precisión</div>
+                  <div class="text-xl font-bold text-indigo-600">{{ progress.get_accuracy|floatformat:1 }}%</div>
+                </div>
+              </div>
+
+              <!-- Barra de progreso -->
+              <div class="mt-3">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ progress.get_accuracy }}%"></div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Gráfica de evolución del índice S -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-chart-area text-indigo-600 mr-2"></i> Evolución del Índice S</h3>
+
+        <canvas id="s-index-chart" height="80"></canvas>
+      </div>
+
+      <!-- Historial detallado de respuestas -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-list text-indigo-600 mr-2"></i> Historial Detallado de Respuestas</h3>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 text-center">
+              <tr>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">#</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Nivel</th>
+                <th></th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Pregunta</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Tiempo</th>
+                <th class=" py-3 text-center text-xs font-medium text-gray-500 uppercase">Índice S</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for answer in answers %}
+                <tr class="{% if answer.is_correct %}
+                    bg-green-50
+                  {% else %}
+                    bg-red-50
+                  {% endif %}">
+                  <td class="px-4 py-3 text-sm font-bold text-center">{{ answer.question_number }}</td>
+                  <td class="px-4 py-3 text-sm text-center">
+                    {% if answer.difficulty_level.name == 'Básico' %}
+                      <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-green-100 text-green-800">{{ answer.difficulty_level.name }}</span>
+                    {% elif answer.difficulty_level.name == 'Intermedio' %}
+                      <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-yellow-100 text-yellow-800">{{ answer.difficulty_level.name }}</span>
+                    {% elif answer.difficulty_level.name == 'Avanzado' %}
+                      <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-red-100 text-red-800">{{ answer.difficulty_level.name }}</span>
+                    {% else %}
+                      <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-indigo-100 text-indigo-800">{{ answer.difficulty_level.name }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if answer.is_correct %}
+                      <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    {% else %}
+                      <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                    {% endif %}
+                  </td>
+                  <td class="py-3 text-sm font-light">
+                    <p class="pb-2"><span class="font-semibold text-gray-600">Tema: </span> {{ answer.question.topic }}</p>
+                    {% with qtype=answer.question.get_question_type_display %}
+                      {% if qtype == 'Audio' %}
+                        <span class="font-semibold text-gray-600">Pregunta de tipo:</span> <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-purple-100 text-purple-800">{{ qtype }}</span>
+                      {% elif qtype == 'Image' %}
+                        <span class="font-semibold text-gray-600">Pregunta de tipo:</span> <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-yellow-100 text-yellow-800">Imagen</span>
+                      {% elif qtype == 'Text' %}
+                        <span class="font-semibold text-gray-600">Pregunta de tipo:</span> <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-blue-100 text-blue-800">Texto</span>
+                      {% else %}
+                        <span class="font-semibold text-gray-600">Pregunta de tipo:</span> <span class="px-2 py-1 rounded shadow-md text-xs font-medium bg-gray-100 text-gray-800">{{ qtype }}</span>
+                      {% endif %}
+                    {% endwith %}
+                    {% comment %} {% if answer.question.statement_text %}
+                      {{ answer.question.statement_text|safe|truncatewords:10 }}
+                    {% else %}
+                      Pregunta de tipo <span class="px-2 py-1 rounded shadow-md bg-blue-100 text-blue-800 text-xs font-medium">{{ answer.question.get_question_type_display }}</span>
+                    {% endif %} {% endcomment %}
+                  </td>
+                  <td class="px-4 py-3 text-center text-sm">
+                    <span class="{% if answer.time_violation %}text-red-600 font-bold{% endif %}">{{ answer.time_taken_seconds }}s / {{ answer.allowed_time_seconds }}s</span>
+                    {% if answer.time_violation %}
+                      <i class="fas fa-exclamation-triangle text-red-600 ml-1" title="Violación de tiempo"></i>
+                    {% endif %}
+                  </td>
+                  <td class="py-3 text-center text-sm font-medium">{{ answer.s_index_after|floatformat:4 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js para gráficas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Datos para la gráfica
+    const sHistoryData = {{ s_history_data|safe }};
+    const lowerLimit = {{ lower_limit }};
+    const upperLimit = {{ upper_limit }};
+    
+    const ctx = document.getElementById('s-index-chart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: sHistoryData.map(d => 'P' + d.question),
+            datasets: [
+                {
+                    label: 'Índice S',
+                    data: sHistoryData.map(d => d.s_index),
+                    borderColor: 'rgb(79, 70, 229)',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'Límite Aprobación',
+                    data: Array(sHistoryData.length).fill(lowerLimit),
+                    borderColor: 'rgb(34, 197, 94)',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                },
+                {
+                    label: 'Límite Reprobación',
+                    data: Array(sHistoryData.length).fill(upperLimit),
+                    borderColor: 'rgb(239, 68, 68)',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(4);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Índice S'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Pregunta'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

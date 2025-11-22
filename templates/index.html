@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio | App de Exámenes{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-lg rounded-xl p-8 text-center mt-8">
+    <h2 class="text-3xl font-bold text-indigo-600 mb-4 mt-4">Bienvenido a la App de Exámenes</h2>
+    <p class="text-lg text-gray-700 mb-6 mt-6">Plataforma intuitiva para presentar exámenes personalizados.</p>
+
+    {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700 transition">
+            Ir al Dashboard
+        </a>
+    {% else %}
+        <a href="{% url 'auth_login' %}" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700 transition">
+            <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+        </a>
+        <a href="{% url 'auth_register' %}" class="inline-block bg-gray-200 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-300 transition ml-4">
+            <i class="fas fa-user-plus mr-2"></i> Registrarse
+        </a>
+    {% endif %}
+
+    <div class="mt-6">
+        <img src="{% static 'img/estudiantes.png' %}" alt="Estudiante" class="mx-auto w-2/3 md:w-1/2">
+    </div>
+</div>
+{% endblock %}

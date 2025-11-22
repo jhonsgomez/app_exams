@@ -1,0 +1,93 @@
+{% extends 'base_table.html' %}
+{% load tz %}
+
+{% block page_title %}
+  Mi Historial de Intentos
+{% endblock %}
+
+{% block back_button %}
+  <a href="{% if user.role.name == 'admin' or user.role.name == 'super_admin' %}{% url 'exam_students' request.resolver_match.kwargs.exam_id %}{% else %}{% url 'exams_available' %}{% endif %}" class="inline-flex items-center text-indigo-600"><i class="fas fa-arrow-left mr-2"></i><span class="hover:underline">Volver</span></a>
+{% endblock %}
+
+{% block crud_title %}
+  Historial de
+{% endblock %} {% block crud_badge %}
+  Intentos
+{% endblock %}
+
+{% block create_button %}
+{% endblock %}
+
+{% block table_header %}
+  <tr class="text-gray-800 text-sm">
+    <th class="px-4 py-2">Examen</th>
+    <th class="px-4 py-2">Intento</th>
+    <th class="px-4 py-2">Fecha</th>
+    <th class="px-4 py-2">Resultado</th>
+    <th class="px-4 py-2">Estadísticas</th>
+    <th class="px-4 py-2">Acciones</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for attempt in page_obj %}
+    <tr class="text-center {% if attempt.status == 'approved' %}
+        bg-green-50
+      {% elif attempt.status == 'failed' %}
+        bg-red-50
+      {% endif %}">
+      <td class="px-4 py-2 text-left">
+        <div class="font-semibold">{{ attempt.exam.title }}</div>
+        <div class="text-xs text-gray-500">{{ attempt.exam.institution.name }}</div>
+      </td>
+      <td class="px-4 py-2">
+        <span class="font-semibold text-md">#{{ attempt.attempt_number }}</span>
+      </td>
+      <td class="px-4 py-2 text-sm">
+        {{ attempt.started_at|date:'d/m/Y H:i' }}
+        {% if attempt.completed_at %}
+          <br /><span class="text-xs text-gray-500">Duración: {{ attempt.get_duration }}</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-2">
+        {% if attempt.status == 'approved' %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i> Aprobado</span>
+        {% elif attempt.status == 'failed' %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800"><i class="fas fa-times-circle mr-1"></i> Reprobado</span>
+        {% elif attempt.status == 'in_progress' %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i> En Progreso</span>
+        {% else %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800"><i class="fas fa-ban mr-1"></i> Abandonado</span>
+        {% endif %}
+      </td>
+      <td class="px-4 py-2">
+        <div class="flex justify-center items-center space-x-4 text-sm">
+          <div>
+            <span class="text-green-600 font-bold">{{ attempt.correct_answers }}</span>
+            <span class="text-gray-400">/</span>
+            <span class="text-red-600 font-bold">{{ attempt.incorrect_answers }}</span>
+          </div>
+          <div class="text-indigo-600 font-semibold">{{ attempt.get_accuracy|floatformat:1 }}%</div>
+        </div>
+      </td>
+      <td class="px-2 py-2">
+        {% if attempt.status == 'in_progress' %}
+          <a href="{% url 'attempt_take' attempt.id %}" class="inline-flex items-center px-3 py-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm"><i class="fas fa-play"></i></a>
+        {% else %}
+          <a href="{% url 'attempt_results' attempt.id attempt.student.id %}" class="inline-flex items-center px-3 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"><i class="fas fa-chart-line"></i></a>
+          {% if user.role.name == 'admin' or user.role.name == 'super_admin' %}
+            <a href="{% url 'attempt_export_csv' attempt.id %}" class="inline-flex items-center px-3 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"><i class="fas fa-file-excel"></i></a>
+          {% endif %}
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+        <i class="fas fa-inbox text-4xl mb-2"></i>
+        <p>No has realizado ningún intento todavía.</p>
+        <a href="{% url 'exams_available' %}" class="text-indigo-600 hover:underline mt-2 inline-block">Ver exámenes disponibles</a>
+      </td>
+    </tr>
+  {% endfor %}
+{% endblock %}
