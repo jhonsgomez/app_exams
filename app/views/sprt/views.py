@@ -18,7 +18,7 @@ from app.models import (
 )
 from app.services.sprt_service import SPRTService
 from django.core.paginator import Paginator
-from utils.utils import generate_exam_report, export_attempt_to_csv
+from utils.report import export_attempt_to_csv
 
 
 # -------------------------------------------------------------------
