@@ -107,10 +107,10 @@ class Question(models.Model):
     )
     statement_text = models.TextField(blank=True, null=True)
     statement_image = models.ImageField(
-        upload_to="img/questions/statements/", blank=True, null=True
+        upload_to="questions/statements/image/", blank=True, null=True
     )
     statement_audio = models.FileField(
-        upload_to="audio/questions/statements/", blank=True, null=True
+        upload_to="questions/statements/audio/", blank=True, null=True
     )
     end_statement = models.TextField(
         default="Seleccione la opción que considere correcta.",
@@ -168,10 +168,10 @@ class AnswerOption(models.Model):
     )
     option_text = models.TextField(blank=True, null=True)
     option_image = models.ImageField(
-        upload_to="img/questions/options/", blank=True, null=True
+        upload_to="questions/options/image/", blank=True, null=True
     )
     option_audio = models.FileField(
-        upload_to="audio/questions/options/", blank=True, null=True
+        upload_to="questions/options/audio/", blank=True, null=True
     )
 
     is_correct = models.BooleanField(default=False)
