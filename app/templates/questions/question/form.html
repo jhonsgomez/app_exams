@@ -80,7 +80,7 @@
         </div>
 
         <div class="mb-4">
-            <label for="time" class="block text-sm font-medium text-gray-700 mb-1">Tiempo (minutos)</label>
+            <label for="time" class="block text-sm font-medium text-gray-700 mb-1">Tiempo (segundos)</label>
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
                     <i class="fa-solid fa-clock"></i>
@@ -88,7 +88,7 @@
                 <input type="number" name="time" id="time" min="1" max="15" required
                     value="{% if question %}{{ question.time }}{% else %}{{ form.time.value|default_if_none:'5' }}{% endif %}"
                     class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Tiempo en minutos">
+                    placeholder="Tiempo en segundos">
             </div>
         </div>
     </div>
