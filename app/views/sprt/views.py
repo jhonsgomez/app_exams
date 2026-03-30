@@ -575,6 +575,9 @@ def export_exam_results(request, exam_id):
             "#",
             "Documento",
             "Estudiante",
+            "Institución",
+            "Programa",
+            "Examen",
             "Intento #",
             "Fecha Inicio",
             "Fecha Fin",
@@ -597,6 +600,13 @@ def export_exam_results(request, exam_id):
                 contador,
                 attempt.student.document_number,
                 attempt.student or attempt.student.username,
+                attempt.student.institution.name if attempt.student.institution else "N/A",
+                (
+                    attempt.student.academic_department.name
+                    if attempt.student and attempt.student.academic_department
+                    else "N/A"
+                ),
+                attempt.exam.title,
                 attempt.attempt_number,
                 attempt.started_at.strftime("%Y-%m-%d %H:%M"),
                 (

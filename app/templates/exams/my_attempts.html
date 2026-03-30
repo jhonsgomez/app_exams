@@ -39,6 +39,9 @@
       <td class="px-4 py-2 text-left">
         <div class="font-semibold">{{ attempt.exam.title }}</div>
         <div class="text-xs text-gray-500">{{ attempt.exam.institution.name }}</div>
+        {% if attempt.student and attempt.student.academic_department %}
+          <div class="text-xs text-gray-500"><b>Programa:</b> {{ attempt.student.academic_department.name }}</div>
+        {% endif %}
       </td>
       <td class="px-4 py-2">
         <span class="font-semibold text-md">#{{ attempt.attempt_number }}</span>
