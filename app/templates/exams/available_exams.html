@@ -46,41 +46,9 @@
       <td class="px-4 py-2">
         <span class="inline-block px-2 py-1 text-xs font-semibold rounded
           {% if data.attempts_remaining > 0 %}
-            
-            
-            
-            
-            
-            
-            
-            
-            bg-blue-100 text-blue-800
-
-
-
-
-
-
-
-
+             bg-blue-100 text-blue-800
           {% else %}
-            
-            
-            
-            
-            
-            
-            
-            
             bg-red-100 text-red-800
-
-
-
-
-
-
-
-
           {% endif %}">
           {{ data.attempts_used }} / {{ data.exam.max_attempts }}
         </span>
@@ -104,10 +72,55 @@
         {% if data.in_progress_attempt %}
           <a href="{% url 'attempt_take' data.in_progress_attempt.id %}" class="inline-flex items-center px-3 py-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"><i class="fas fa-play"></i></a>
         {% elif data.can_attempt %}
-          <form action="{% url 'attempt_start' data.exam.id %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="cursor-pointer inline-flex items-center px-3 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-play"></i></button>
-          </form>
+          <button type="button" onclick="openInstructionsModal()" class="cursor-pointer inline-flex items-center px-3 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-play"></i></button>
+
+          <div id="instructionsOverlay" class="fixed inset-0 backdrop-blur-sm bg-black/40 hidden z-50 justify-center items-center transition-opacity duration-300 p-4">
+            <div id="instructionsModal" class="opacity-0 scale-95 transform transition-all duration-300 bg-white rounded-lg shadow-lg w-[95vw] md:w-[80vw] max-w-6xl max-h-[80vh] flex flex-col text-left">
+              <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">Instructivo para estudiantes que presentan la Evaluación Adaptativa Secuencial</h2>
+              </div>
+
+              <div class="px-6 py-4 flex-1 overflow-y-auto text-gray-700 text-sm leading-relaxed" style="max-height: 50vh;">
+                <h3 class="font-semibold text-base mb-3">1. Información sobre el Examen Adaptativo Secuencial</h3>
+                <p class="mb-2">Este examen tiene unas características que lo diferencian completamente con pruebas de corte tradicional y entre ellas están:</p>
+                <ul class="list-inside mb-4 space-y-1">
+                  <li>
+                    <strong>1.1</strong> Es una evaluación individualizada, por lo tanto, el examen de cada alumno no tiene ni las mismas preguntas, ni el mismo número de preguntas y por lo tanto no tiene el mismo tiempo para responder el examen.
+                  </li>
+                  <li>
+                    <strong>1.2</strong> Es una evaluación adaptativa, porque registra, mantiene y actualiza información sobre el desempeño del estudiante durante la prueba, de tal forma que cada pregunta del examen es seleccionada según el desempeño previo que se haya mostrado durante el examen
+                  </li>
+                  <li>
+                    <strong>1.3</strong> Es una evaluación formativa, porque se enviará un mensaje después de que se ha respondido cada pregunta y también al final del examen que indican no solo el desempeño o resultado, sino también las debilidades en la formación, que pueden ser útiles para orientar futuros aprendizajes
+                  </li>
+                </ul>
+
+                <h3 class="font-semibold text-base mb-3">2. Instrucciones para presentar el Examen</h3>
+                <ul class="list-inside space-y-2">
+                  <li>
+                    <strong>2.1</strong> Antes de iniciar el examen se solicita al estudiante la lectura del instructivo y se dan aclaraciones sobre el procedimiento del examen
+                  </li>
+                  <li>
+                    <strong>2.2</strong> Se presenta en la pantalla una pregunta y el tiempo permitido para responderla y se solicita responderla según el tipo o la modalidad de la pregunta. El Sistema de Evaluación registra la respuesta, produce la retroalimentación o mensaje formativo y aplica un algoritmo secuencial para definir la continuación del examen y/o si existe información suficiente para tomar una decisión respecto al examen.
+                  </li>
+                  <li>
+                    <strong>2.3</strong> Este proceso de evaluación se repite hasta que el Sistema de Evaluación toma la decisión de APROBAR o REPROBAR el examen y reproduce la información prevista (Retroalimentación Final) para Final del Examen con un resumen de debilidades del estudiante
+                  </li>
+                  <li>
+                    <strong>2.4</strong> El estudiante debe abandonar inmediatamente el lugar de la evaluación
+                  </li>
+                </ul>
+              </div>
+
+              <form action="{% url 'attempt_start' data.exam.id %}" method="post" class="px-6 py-4 border-t border-gray-200">
+                {% csrf_token %}
+                <div class="flex justify-end gap-2">
+                  <button type="button" onclick="closeInstructionsModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 cursor-pointer"><i class="fas fa-times"></i> Cancelar</button>
+                  <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"><i class="fas fa-play"></i> Comenzar</button>
+                </div>
+              </form>
+            </div>
+          </div>
         {% else %}
           <div class="inline-flex items-center px-3 py-3 text-red-600 rounded-md border border-gray-300 shadow">
             <i class="fas fa-ban"></i>
@@ -124,4 +137,35 @@
       <td colspan="6" class="px-4 py-2 text-center">No hay exámenes disponibles en este momento.</td>
     </tr>
   {% endfor %}
+{% endblock %}
+
+{% block custom_js %}
+  <script>
+    const overlay = document.getElementById('instructionsOverlay')
+    const instructionsModal = document.getElementById('instructionsModal')
+    const cancelInstructionsBtn = instructionsModal.querySelector('button[onclick="closeInstructionsModal()"]')
+    const startExamBtn = instructionsModal.querySelector('button[type="submit"]')
+    
+    function openInstructionsModal() {
+      overlay.classList.remove('hidden')
+      overlay.classList.add('flex')
+      setTimeout(() => {
+        overlay.classList.add('opacity-100')
+        instructionsModal.classList.remove('opacity-0', 'scale-95')
+        instructionsModal.classList.add('opacity-100', 'scale-100')
+      }, 10)
+    }
+    
+    function closeInstructionsModal() {
+      instructionsModal.classList.remove('opacity-100', 'scale-100')
+      instructionsModal.classList.add('opacity-0', 'scale-95')
+      overlay.classList.remove('opacity-100')
+      setTimeout(() => {
+        overlay.classList.remove('flex')
+        overlay.classList.add('hidden')
+      }, 300)
+    }
+    
+    cancelInstructionsBtn.addEventListener('click', closeInstructionsModal)
+  </script>
 {% endblock %}

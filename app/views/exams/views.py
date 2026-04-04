@@ -119,17 +119,23 @@ def update(request, exam_id):
 
             for bank in question_banks:
                 total_available_questions += bank.total_questions
-                
+
                 basics_count = bank.questions.filter(
-                    difficulty_level__name="Básico", is_active=True, deleted_at__isnull=True
+                    difficulty_level__name="Básico",
+                    is_active=True,
+                    deleted_at__isnull=True,
                 ).count()
 
                 intermediate_count = bank.questions.filter(
-                    difficulty_level__name="Intermedio", is_active=True, deleted_at__isnull=True
+                    difficulty_level__name="Intermedio",
+                    is_active=True,
+                    deleted_at__isnull=True,
                 ).count()
 
                 advanced_count = bank.questions.filter(
-                    difficulty_level__name="Avanzado", is_active=True, deleted_at__isnull=True
+                    difficulty_level__name="Avanzado",
+                    is_active=True,
+                    deleted_at__isnull=True,
                 ).count()
 
                 bank.total_questions_basics = basics_count
