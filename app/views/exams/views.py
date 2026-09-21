@@ -186,6 +186,10 @@ def save(request):
                     start_date = to_aware(request.POST.get("start_date"))
                     end_date = to_aware(request.POST.get("end_date"))
                     institution_id = request.POST.get("institution")
+                    p0 = request.POST.get("p0", 60.0)
+                    p1 = request.POST.get("p1", 40.0)
+                    a = request.POST.get("a", 0.1)
+                    b = request.POST.get("b", 0.1)
                     selected_banks = request.POST.getlist("question_banks")
                     if request.user.institution:
                         institution_id = request.user.institution.id
@@ -236,6 +240,10 @@ def save(request):
                         )
                         return redirect("exams_update", exam_id=exam_id)
 
+                    if float(p0) <= float(p1):
+                        messages.error(request, "El valor de P0 debe ser mayor estrictamente que P1.")
+                        return redirect("exams_update", exam_id=exam_id) # o 'exams_create' en el bloque else
+                    
                     total_available_questions = 0
 
                     for bank_id in selected_banks:
@@ -257,6 +265,10 @@ def save(request):
                     exam.start_date = start_date
                     exam.end_date = end_date
                     exam.institution_id = institution_id
+                    exam.p0 = float(p0)
+                    exam.p1 = float(p1)
+                    exam.a = float(a)
+                    exam.b = float(b)
                     exam.is_active = True
                     exam.save()
 
@@ -280,6 +292,10 @@ def save(request):
                     start_date = to_aware(request.POST.get("start_date"))
                     end_date = to_aware(request.POST.get("end_date"))
                     institution_id = request.POST.get("institution")
+                    p0 = request.POST.get("p0", 60.0)
+                    p1 = request.POST.get("p1", 40.0)
+                    a = request.POST.get("a", 0.1)
+                    b = request.POST.get("b", 0.1)
                     selected_banks = request.POST.getlist("question_banks")
                     if request.user.institution:
                         institution_id = request.user.institution.id
@@ -330,6 +346,10 @@ def save(request):
                         )
                         return redirect("exams_create")
 
+                    if float(p0) <= float(p1):
+                        messages.error(request, "El valor de P0 debe ser mayor estrictamente que P1.")
+                        return redirect("exams_create")
+                    
                     total_available_questions = 0
 
                     for bank_id in selected_banks:
@@ -349,6 +369,10 @@ def save(request):
                         description=description,
                         max_attempts=attempts,
                         max_questions=max_questions,
+                        p0=float(p0),
+                        p1=float(p1),
+                        a=float(a),
+                        b=float(b),
                         start_date=start_date,
                         end_date=end_date,
                         institution_id=institution_id,
@@ -413,117 +437,3 @@ def delete(request, exam_id):
             messages.error(request, f"Error al eliminar el examen: {str(e)}")
 
     return redirect("exams_table")
-
-
-# SPRT
-
-# Agregar estos imports al inicio del archivo
-from app.models import ExamSPRTConfig, DifficultyLevel, ExamAttempt
-from django.db import models
-
-
-# Agregar esta vista después de la función create existente
-@login_required(login_url="auth_login")
-@is_admin
-def configure_sprt(request, exam_id):
-    """
-    Vista para configurar parámetros SPRT de un examen.
-    """
-    exam = get_object_or_404(Exam, pk=exam_id, deleted_at__isnull=True)
-
-    # Obtener o crear configuración SPRT
-    sprt_config, created = ExamSPRTConfig.objects.get_or_create(
-        exam=exam,
-        defaults={
-            "p0": 60.0,
-            "p1": 40.0,
-            "alpha": 0.1,
-            "beta": 0.1,
-            "min_questions_per_level": 3,
-            "success_threshold_to_advance": 0.70,
-        },
-    )
-
-    if request.method == "POST":
-        try:
-            # Actualizar configuración
-            sprt_config.p0 = float(request.POST.get("p0", 60.0))
-            sprt_config.p1 = float(request.POST.get("p1", 40.0))
-            sprt_config.alpha = float(request.POST.get("alpha", 0.1))
-            sprt_config.beta = float(request.POST.get("beta", 0.1))
-            sprt_config.min_questions_per_level = int(
-                request.POST.get("min_questions_per_level", 3)
-            )
-            sprt_config.success_threshold_to_advance = float(
-                request.POST.get("success_threshold_to_advance", 0.70)
-            )
-
-            # Validar antes de guardar
-            sprt_config.full_clean()
-            sprt_config.save()
-
-            messages.success(request, "Configuración SPRT actualizada correctamente.")
-            return redirect("exams_table")
-
-        except Exception as e:
-            messages.error(request, f"Error al guardar configuración: {str(e)}")
-
-    context = {
-        "exam": exam,
-        "sprt_config": sprt_config,
-    }
-
-    return render(request, "exams/configure_sprt.html", context)
-
-
-# Vista para ver estadísticas de intentos de un examen
-@login_required(login_url="auth_login")
-@is_admin
-def exam_statistics(request, exam_id):
-    """
-    Muestra estadísticas generales de un examen.
-    """
-    exam = get_object_or_404(Exam, pk=exam_id, deleted_at__isnull=True)
-
-    attempts = ExamAttempt.objects.filter(exam=exam)
-
-    # Estadísticas generales
-    total_attempts = attempts.count()
-    approved_count = attempts.filter(status=ExamAttempt.Status.APPROVED).count()
-    failed_count = attempts.filter(status=ExamAttempt.Status.FAILED).count()
-    in_progress_count = attempts.filter(status=ExamAttempt.Status.IN_PROGRESS).count()
-    abandoned_count = attempts.filter(status=ExamAttempt.Status.ABANDONED).count()
-
-    # Calcular promedios
-    completed_attempts = attempts.exclude(status=ExamAttempt.Status.IN_PROGRESS)
-
-    if completed_attempts.exists():
-        avg_questions = completed_attempts.aggregate(avg=models.Avg("total_questions"))[
-            "avg"
-        ]
-        avg_accuracy = (
-            sum(a.get_accuracy() for a in completed_attempts)
-            / completed_attempts.count()
-        )
-    else:
-        avg_questions = 0
-        avg_accuracy = 0
-
-    context = {
-        "exam": exam,
-        "total_attempts": total_attempts,
-        "approved_count": approved_count,
-        "failed_count": failed_count,
-        "in_progress_count": in_progress_count,
-        "abandoned_count": abandoned_count,
-        "avg_questions": round(avg_questions, 2) if avg_questions else 0,
-        "avg_accuracy": round(avg_accuracy, 2),
-        "approval_rate": (
-            round((approved_count / total_attempts * 100), 2)
-            if total_attempts > 0
-            else 0
-        ),
-        "recent_attempts": attempts.order_by("-started_at")[:10],
-    }
-
-    return render(request, "exams/exam_statistics.html", context)

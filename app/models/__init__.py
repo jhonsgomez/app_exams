@@ -20,9 +20,7 @@ from .questions.models import (
 from .exams.models import Exam
 from .user.models import CustomUser
 
-from .sprt.models import (
-    ExamSPRTConfig,
+from .attempts.models import (
     ExamAttempt,
-    AttemptAnswer,
-    LevelProgress,
+    AttemptResponse,
 )

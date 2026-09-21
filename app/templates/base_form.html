@@ -45,7 +45,7 @@
 <script>
     const saveForm = document.getElementById('saveForm');
 
-    saveForm.addEventListener('submit', function(event) {
+    saveForm?.addEventListener('submit', function(event) {
         event.preventDefault();
         const saveButton = document.getElementById('saveButton');
         const formAction = saveButton.getAttribute('data-url');

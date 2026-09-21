@@ -86,32 +86,32 @@
         </li>
 
         <li>
-          <a href="{% url 'exams_configure_sprt' exam.id %}" class="inline-flex items-center text-purple-600" title="Configurar SPRT">
-            <i class="fas fa-cogs"></i>
-            <span class="ml-2 text-xs hover:underline">Parámetros</span>
+          <a href="{% url 'exam_export_report' exam.id %}" class="inline-flex items-center text-green-600">
+            <i class="fas fa-download"></i>
+            <span class="ml-2 text-xs hover:underline">Exportar</span>
           </a>
         </li>
 
-        <li>
+        {% comment %} <li>
           <a href="{% url 'exams_statistics' exam.id %}" class="inline-flex items-center text-blue-600" title="Ver estadísticas">
             <i class="fas fa-chart-bar"></i>
             <span class="ml-2 text-xs hover:underline">Estadísticas</span>
           </a>
-        </li>
+        </li> {% endcomment %}
 
-        <li>
+        {% comment %} <li>
           <a href="{% url 'exam_students' exam.id %}" class="inline-flex items-center text-gray-600" title="Ver estudiantes inscritos">
             <i class="fas fa-user-graduate"></i>
             <span class="ml-2 text-xs hover:underline">Estudiantes</span>
           </a>
-        </li>
+        </li> {% endcomment %}
 
-        <li>
+        {% comment %} <li>
           <a href="{% url 'exam_export_results' exam.id %}" class="inline-flex items-center text-green-600">
             <i class="fas fa-file-excel"></i>
             <span class="ml-2 text-xs hover:underline">Exportar</span>
           </a>
-        </li>
+        </li> {% endcomment %}
           </ul>
 
         {% elif request.user.role.name == 'estudiante' %}

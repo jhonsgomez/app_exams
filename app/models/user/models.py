@@ -40,6 +40,8 @@ class CustomUser(AbstractBaseUser):
         null=True,
         blank=True,
     )
+    
+    gender = models.CharField(max_length=255, blank=True, null=True)
 
     institution = models.ForeignKey(
         "app.Institution",

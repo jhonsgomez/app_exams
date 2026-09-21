@@ -1,0 +1,132 @@
+{% extends 'base_form.html' %} <!-- Ajusta al nombre de tu plantilla base -->
+
+{% block page_title %}Examen en Progreso | Adaptiva Virtual Assessment{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md mt-6">
+    
+    <!-- Encabezado y Temporizador -->
+    <div class="flex justify-between items-center border-b pb-4 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">{{ exam.title }}</h2>
+            <p class="text-sm text-gray-500">
+                Pregunta {{ attempt.questions_answered|add:1 }} 
+                <span class="mx-2">|</span> 
+                Tema: {{ question.topic }}
+            </p>
+        </div>
+        <div class="text-right">
+            <p class="text-sm text-gray-500 mb-1">Tiempo restante</p>
+            <div id="timerDisplay" class="text-3xl font-mono font-bold text-indigo-600">
+                --:--
+            </div>
+        </div>
+    </div>
+
+    <!-- Enunciado de la Pregunta -->
+    <div class="mb-8">
+        {% if question.start_statement %}
+            <p class="text-gray-700 mb-4">{{ question.start_statement }}</p>
+        {% endif %}
+
+        <!-- Renderizado dinámico según el tipo de enunciado -->
+        <div class="mb-4 mx-auto">
+            {% if question.statement_type == 'text' and question.statement_text %}
+                <p class="text-lg font-medium text-gray-900" style="user-select: none;">{{ question.statement_text|safe }}</p>
+            {% elif question.statement_type == 'image' and question.statement_image %}
+                <img src="{{ question.statement_image.url }}" alt="Imagen de la pregunta" class="max-w-full mx-auto h-auto rounded shadow">
+            {% elif question.statement_type == 'audio' and question.statement_audio %}
+                <audio controls class="w-full">
+                    <source src="{{ question.statement_audio.url }}" type="audio/mpeg">
+                    Tu navegador no soporta el elemento de audio.
+                </audio>
+            {% endif %}
+        </div>
+
+        {% if question.end_statement %}
+            <p class="text-gray-700 mt-4">{{ question.end_statement }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Formulario de Respuestas -->
+    <form id="examForm" method="POST" action="{% url 'exam_process' attempt.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+        <input type="hidden" name="time_taken" id="time_taken" value="0">
+
+        <div class="space-y-3 mb-8">
+            {% for option in question.options.all %}
+                <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input type="radio" name="option_id" value="{{ option.id }}" required class="h-5 w-5 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-3 block flex-1">
+                        {% if option.option_type == 'text' %}
+                            <span class="text-gray-900" style="user-select: none;">{{ option.option_text|safe }}</span>
+                        {% elif option.option_type == 'image' %}
+                            <img src="{{ option.option_image.url }}" alt="Opción imagen" class="max-h-32 mx-auto rounded">
+                        {% elif option.option_type == 'audio' %}
+                            <audio controls class="w-full mt-2">
+                                <source src="{{ option.option_audio.url }}" type="audio/mpeg">
+                            </audio>
+                        {% endif %}
+                    </span>
+                </label>
+            {% endfor %}
+        </div>
+
+        <div class="flex justify-end border-t pt-4">
+            <button type="submit" class="px-6 rounded py-2 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors cursor-pointer">
+                Responder
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Lógica del Temporizador en JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Obtenemos el tiempo límite desde el backend (en segundos)
+        let timeLeft = parseInt("{{ question.time }}", 10);
+        let timeTaken = 0;
+        
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timeTakenInput = document.getElementById('time_taken');
+        const examForm = document.getElementById('examForm');
+
+        function updateDisplay() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            // Formatear para que siempre tenga dos dígitos (ej. 09)
+            timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            // Cambiar color a rojo si quedan menos de 10 segundos
+            if (timeLeft <= 10) {
+                timerDisplay.classList.remove('text-indigo-600');
+                timerDisplay.classList.add('text-red-600', 'animate-pulse');
+            }
+        }
+
+        // Llamada inicial para mostrar el tiempo de inmediato
+        updateDisplay();
+
+        const countdown = setInterval(function() {
+            timeLeft--;
+            timeTaken++;
+            timeTakenInput.value = timeTaken; // Actualizamos el input oculto
+            
+            updateDisplay();
+
+            // Lógica cuando se acaba el tiempo
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                
+                // Deseleccionar cualquier opción marcada
+                const options = document.querySelectorAll('input[name="option_id"]');
+                options.forEach(opt => opt.checked = false);
+                
+                // Enviar el formulario automáticamente
+                examForm.submit();
+            }
+        }, 1000);
+    });
+</script>
+{% endblock %}

@@ -9,24 +9,18 @@ class Exam(models.Model):
     description = models.TextField(blank=True)
     max_attempts = models.PositiveIntegerField(default=1)
     max_questions = models.PositiveIntegerField(default=10)
+    
+    p0 = models.FloatField(default=60.0, help_text="Umbral de competencia esperado (P0)")
+    p1 = models.FloatField(default=40.0, help_text="Umbral de conocimiento inaceptable (P1)")
+    a = models.FloatField(default=0.1, help_text="Margen de error falsos positivos (a)")
+    b = models.FloatField(default=0.1, help_text="Margen de error falsos negativos (b)")
+    
     question_banks = models.ManyToManyField("app.QuestionBank", related_name="exams")
     institution = models.ForeignKey(
         "app.Institution", on_delete=models.CASCADE, related_name="exams"
     )
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-
-    # Nuevos campos para SPRT
-    enable_adaptive_testing = models.BooleanField(
-        default=True, help_text="Activar evaluación adaptativa SPRT"
-    )
-    enable_difficulty_progression = models.BooleanField(
-        default=True, help_text="Permitir progresión por niveles de dificultad"
-    )
-    enforce_time_limits = models.BooleanField(
-        default=True, help_text="Aplicar límites de tiempo estrictos"
-    )
-
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

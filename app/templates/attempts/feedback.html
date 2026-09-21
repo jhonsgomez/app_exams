@@ -1,0 +1,134 @@
+{% extends 'base_form.html' %}
+
+{% block page_title %}Retroalimentación | Adaptiva Virtual Assessment{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-10 px-4 rounded-lg">
+    <!-- Tarjeta principal -->
+    <div class="shadow-xl overflow-hidden bg-white border border-gray-100 rounded-lg">
+        
+        <!-- Header de Estado (Color dinámico) -->
+        <div class="p-8 text-center {% if response.is_correct %}bg-green-50{% else %}bg-red-50{% endif %} {% if response.is_correct %}border-green-100{% else %}border-red-100{% endif %}">
+            <div class="mb-2">
+                {% if response.is_correct %}
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4 shadow-sm">
+                        <i class="fa-solid fa-check text-4xl text-green-500"></i>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-green-800">¡Respuesta Correcta!</h2>
+                {% else %}
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4 shadow-sm">
+                        <i class="fa-solid fa-xmark text-4xl text-red-500"></i>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-red-800">Respuesta Incorrecta</h2>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-6 md:p-10">
+            <!-- SECCIÓN: TU RESPUESTA -->
+            <div class="mb-10">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center">
+                    Su selección
+                </h3>
+                
+                <div class="relative bg-white shadow-sm border border-gray-200 overflow-hidden">
+                    <!-- Borde lateral de acento -->
+                    <div class="absolute left-0 top-0 bottom-0 w-2 {% if response.is_correct %}bg-green-500{% else %}bg-red-500{% endif %}"></div>
+                    
+                    <div class="p-6 pl-8">
+                        {% if selected_option %}
+                            <!-- Contenido de la opción seleccionada -->
+                            <div class="text-md text-gray-800 mb-6 text-center">
+                                {% if selected_option.option_type == 'text' %}
+                                    {{ selected_option.option_text|safe }}
+                                {% elif selected_option.option_type == 'image' %}
+                                    <div class="flex flex-col items-start">
+                                        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mb-3">Imagen</span>
+                                        <img src="{{ selected_option.option_image.url }}" alt="Tu respuesta" class="max-h-40 rounded-lg shadow-sm border border-gray-100 object-contain">
+                                    </div>
+                                {% elif selected_option.option_type == 'audio' %}
+                                    <div class="flex flex-col items-start">
+                                        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded mb-3">Audio</span>
+                                        <audio controls class="w-full max-w-md custom-audio">
+                                            <source src="{{ selected_option.option_audio.url }}" type="audio/mpeg">
+                                        </audio>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Retroalimentación del profesor destacada -->
+                            <div class="bg-green-50/50 p-5 border border-gray-100 text-gray-700 shadow-md">
+                                <div class="flex items-center mb-2 text-gray-700">
+                                    <span class="font-bold text-sm uppercase tracking-wide">Retroalimentación: </span>
+                                </div>
+                                <div class="text-base leading-relaxed">
+                                    {{ selected_option.feedback|safe }}
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Caso: Tiempo Agotado -->
+                            <div class="flex items-center text-red-600 font-semibold text-lg mb-4">
+                                <i class="fa-solid fa-stopwatch text-2xl mr-3"></i> 
+                                No respondiste a tiempo
+                            </div>
+                            <p class="text-gray-600">El tiempo se agotó antes de que pudieras seleccionar una opción, por lo que se ha marcado como incorrecta.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: OTRAS OPCIONES -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center">
+                    Otras opciones
+                </h3>
+                
+                <div class="space-y-4">
+                    {% for option in question.options.all %}
+                        {% if not selected_option or option.id != selected_option.id %}
+                            <div class="bg-gray-50 border border-gray-200 p-5 hover:shadow-md transition-shadow duration-200">
+                                <div class="flex flex-col md:flex-row md:gap-8">
+                                    
+                                    <!-- Columna Izquierda: La Opción -->
+                                    <div class="md:w-2/5 mb-4 md:mb-0">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wide block mb-2">Opción: </span>
+                                        <div class="text-gray-700">
+                                            {% if option.option_type == 'text' %}
+                                                {{ option.option_text|safe }}
+                                            {% elif option.option_type == 'image' %}
+                                                <img src="{{ option.option_image.url }}" alt="Opción alterna" class="max-h-28 rounded-lg shadow-sm border border-gray-100 object-contain" />
+                                            {% elif option.option_type == 'audio' %}
+                                                <audio controls class="w-full max-w-xs">
+                                                    <source src="{{ option.option_audio.url }}" type="audio/mpeg" />
+                                                </audio>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Columna Derecha: Feedback de esa opción -->
+                                    <div class="md:w-3/5 md:border-l md:border-gray-200 md:pl-8">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wide block mb-2">Por qué es (o no) correcta: </span>
+                                        <div class="text-gray-600 text-sm leading-relaxed">
+                                            {{ option.feedback|safe }}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- BOTÓN CONTINUAR -->
+            <div class="mt-12 flex justify-center md:justify-end border-t border-gray-100 pt-8">
+                <a href="{% url next_url attempt.id %}" class="rounded group flex items-center justify-center px-8 py-3.5 bg-indigo-600 text-white font-bold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Continuar
+                    <i class="fa-solid fa-arrow-right ml-3 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

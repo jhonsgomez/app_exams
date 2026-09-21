@@ -111,6 +111,9 @@ def save(request):
                 email = request.POST.get("email")
                 if email:
                     email = email.strip()
+                gender = request.POST.get("gender")
+                if gender:
+                    gender = gender.strip()
                 institution_id = request.POST.get("institution")
                 if institution_id:
                     institution_id = institution_id.strip()
@@ -141,6 +144,10 @@ def save(request):
 
                 if not email:
                     messages.error(request, "El email es obligatorio.")
+                    return redirect("students_update", student_id=student_id)
+                
+                if not gender:
+                    messages.error(request, "El género es obligatorio.")
                     return redirect("students_update", student_id=student_id)
 
                 if not institution_id:
@@ -202,6 +209,7 @@ def save(request):
                 student.last_name = last_name
                 student.email = email
                 student.role = role
+                student.gender = gender
                 student.institution_id = institution_id
                 student.academic_department_id = academic_department_id
                 student.group_id = group_id
@@ -231,6 +239,9 @@ def save(request):
                 email = request.POST.get("email")
                 if email:
                     email = email.strip()
+                gender = request.POST.get("gender")
+                if gender:
+                    gender = gender.strip()
                 institution_id = request.POST.get("institution")
                 if institution_id:
                     institution_id = institution_id.strip()
@@ -261,6 +272,10 @@ def save(request):
 
                 if not email:
                     messages.error(request, "El email es obligatorio.")
+                    return redirect("students_create")
+                
+                if not gender:
+                    messages.error(request, "El género es obligatorio.")
                     return redirect("students_create")
 
                 if not institution_id:
@@ -323,6 +338,7 @@ def save(request):
                     last_name=last_name,
                     email=email,
                     role=role,
+                    gender=gender,
                     institution_id=institution_id,
                     academic_department_id=academic_department_id,
                     group_id=group_id,

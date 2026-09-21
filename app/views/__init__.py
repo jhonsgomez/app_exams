@@ -126,8 +126,6 @@ from .exams.views import (
     deactivate as exams_deactivate,
     activate as exams_activate,
     delete as exams_delete,
-    configure_sprt,
-    exam_statistics,
 )
 
 # User Routes
@@ -151,16 +149,16 @@ from .users.students.views import (
     delete as students_delete,
 )
 
-# sprt views
-from .sprt.views import (
+from .attempts.views import (
     available_exams,
-    start_attempt,
-    take_attempt,
-    submit_answer,
-    attempt_results,
     my_attempts,
-    abandon_attempt,
     exam_students,
     export_attempt_csv,
     export_exam_results,
+    start_exam,
+    take_exam,
+    process_answer,
+    exam_feedback,
+    exam_summary,
+    export_exam_report,
 )

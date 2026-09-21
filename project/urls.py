@@ -21,8 +21,7 @@ from app.urls import (
     exams_urls,
     admins_urls,
     students_urls,
-    
-    sprt_urls,
+    attempts_urls,
 )
 
 urlpatterns = [
@@ -45,8 +44,7 @@ urlpatterns = [
     path("exams/", include(exams_urls)),
     path("admins/", include(admins_urls)),
     path("students/", include(students_urls)),
-    
-    path("sprt/", include(sprt_urls)),
+    path("attempts/", include(attempts_urls)),
 ]
 
 if settings.DEBUG:

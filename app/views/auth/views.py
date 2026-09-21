@@ -74,6 +74,9 @@ def register(request):
             email = request.POST.get("email")
             if email:
                 email = email.strip()
+            gender = request.POST.get("gender")
+            if gender:
+                gender = gender.strip()
             institution_id = request.POST.get("institution")
             if institution_id:
                 institution_id = institution_id.strip()
@@ -104,6 +107,10 @@ def register(request):
 
             if not email:
                 messages.error(request, "El email es obligatorio.")
+                return redirect("auth_register")
+            
+            if not gender:
+                messages.error(request, "El género es obligatorio.")
                 return redirect("auth_register")
 
             if not institution_id:
@@ -156,6 +163,7 @@ def register(request):
                 last_name=last_name,
                 email=email,
                 role=role,
+                gender=gender,
                 institution_id=institution_id,
                 academic_department_id=academic_department_id,
                 group_id=group_id,

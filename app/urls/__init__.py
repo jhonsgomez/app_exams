@@ -19,8 +19,7 @@ from .questions.bank.urls import urlpatterns as questions_bank_urls
 from .questions.question.urls import urlpatterns as questions_urls
 
 from .exams.urls import urlpatterns as exams_urls
+from .attempts.urls import urlpatterns as attempts_urls
 
 from .users.admins.urls import urlpatterns as admins_urls
 from .users.students.urls import urlpatterns as students_urls
-
-from .sprt.urls import urlpatterns as sprt_urls

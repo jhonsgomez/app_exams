@@ -7,9 +7,6 @@ from app.views import (
     exams_deactivate,
     exams_activate,
     exams_delete,
-    
-    configure_sprt,
-    exam_statistics,
 )
 
 urlpatterns = [
@@ -20,8 +17,4 @@ urlpatterns = [
     path("deactivate/<int:exam_id>/", exams_deactivate, name="exams_deactivate"),
     path("activate/<int:exam_id>/", exams_activate, name="exams_activate"),
     path("delete/<int:exam_id>/", exams_delete, name="exams_delete"),
-    
-    # SPRT specific routes
-    path('<int:exam_id>/configure-sprt/', configure_sprt, name='exams_configure_sprt'),
-    path('<int:exam_id>/statistics/', exam_statistics, name='exams_statistics'),
 ]

@@ -57,7 +57,6 @@
                     name="attempts"
                     id="attempts"
                     min="1"
-                    max="20"
                     value="{% if exam %}{{ exam.max_attempts }}{% else %}{{ form.attempts.value|default_if_none:'1' }}{% endif %}"
                     class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Número de intentos permitidos"
@@ -128,28 +127,6 @@
             {% endif %}
         </div>
 
-        <div>
-            <label for="max_questions" class="block text-sm font-medium text-gray-700 mb-1">Preguntas máximas</label>
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                    <i class="fa-solid fa-question"></i>
-                </span>
-                <input
-                    type="number"
-                    name="max_questions"
-                    id="max_questions"
-                    min="1"
-                    max="{{ total_available_questions }}"
-                    value="{% if exam %}{{ exam.max_questions }}{% else %}{{ form.max_questions.value|default_if_none:'1' }}{% endif %}"
-                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Número máximo de preguntas a seleccionar"
-                    required>
-            </div>
-            {% if form.max_questions.errors %}
-                <p class="text-red-500 text-sm mt-1">{{ form.max_questions.errors.0 }}</p>
-            {% endif %}
-        </div>
-
         {% if user.role.name == 'super_admin' %}
             <div>
                 <label for="institution" class="block text-sm font-medium text-gray-700 mb-1">Institución</label>
@@ -173,6 +150,88 @@
                 {% endif %}
             </div>
         {% endif %}
+    </div>
+
+    <hr class="mt-10 border-t border-gray-400">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Parámetro P0 -->
+        <div>
+            <label for="p0" class="block text-sm font-medium text-gray-700 mb-1">Competencia esperada</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-chart-line"></i>
+                </span>
+                <input type="number" step="0.1" name="p0" id="p0" min="0" max="100"
+                    value="{% if exam %}{{ exam.p0 }}{% else %}{{ form.p0.value|default_if_none:'60' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required>
+            </div>
+        </div>
+
+        <!-- Parámetro P1 -->
+        <div>
+            <label for="p1" class="block text-sm font-medium text-gray-700 mb-1">Conocimiento inaceptable</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-chart-line"></i>
+                </span>
+                <input type="number" step="0.1" name="p1" id="p1" min="0" max="100"
+                    value="{% if exam %}{{ exam.p1 }}{% else %}{{ form.p1.value|default_if_none:'40' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required>
+            </div>
+        </div>
+
+        <!-- Parámetro A -->
+        <div>
+            <label for="a" class="block text-sm font-medium text-gray-700 mb-1">Error tipo 1</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-percent"></i>
+                </span>
+                <input type="number" step="0.01" name="a" id="a" min="0.01" max="0.99"
+                    value="{% if exam %}{{ exam.a }}{% else %}{{ form.a.value|default_if_none:'0.1' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required>
+            </div>
+        </div>
+
+        <!-- Parámetro B -->
+        <div>
+            <label for="b" class="block text-sm font-medium text-gray-700 mb-1">Error tipo 2</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-percent"></i>
+                </span>
+                <input type="number" step="0.01" name="b" id="b" min="0.01" max="0.99"
+                    value="{% if exam %}{{ exam.b }}{% else %}{{ form.b.value|default_if_none:'0.1' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required>
+            </div>
+        </div>
+
+        <div>
+            <label for="max_questions" class="block text-sm font-medium text-gray-700 mb-1">Preguntas máximas</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fa-solid fa-question"></i>
+                </span>
+                <input
+                    type="number"
+                    name="max_questions"
+                    id="max_questions"
+                    min="1"
+                    max="{{ total_available_questions }}"
+                    value="{% if exam %}{{ exam.max_questions }}{% else %}{{ form.max_questions.value|default_if_none:'1' }}{% endif %}"
+                    class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Número máximo de preguntas a seleccionar"
+                    required>
+            </div>
+            {% if form.max_questions.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.max_questions.errors.0 }}</p>
+            {% endif %}
+        </div>
     </div>
 
     <hr class="mt-10 border-t border-gray-400">
