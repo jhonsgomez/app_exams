@@ -509,7 +509,7 @@ def process_answer(request, attempt_id):
     limite_inferior = math.log(b / (1 - a))
     limite_superior = math.log((1 - b) / a)
     
-    # Evaluación de estado corregida
+    # Evaluación de estado
     if s <= limite_inferior:
         # Aprobación temprana por certeza estadística
         attempt.status = ExamAttempt.StatusChoices.PASSED
@@ -519,12 +519,14 @@ def process_answer(request, attempt_id):
         attempt.status = ExamAttempt.StatusChoices.FAILED
         attempt.end_time = timezone.now()
     elif attempt.questions_answered >= m:
-        # Se agotan las preguntas sin tocar límites: Evaluamos el saldo final
-        # Si S <= 0, los aciertos (ponderados) superan o igualan el umbral exigido
-        if s <= 0:
+        # Se agota el máximo de preguntas (M): Evaluamos estrictamente por el porcentaje P0
+        porcentaje_aciertos = (attempt.correct_count / attempt.questions_answered) * 100
+        
+        if porcentaje_aciertos >= p0:
             attempt.status = ExamAttempt.StatusChoices.PASSED
         else:
             attempt.status = ExamAttempt.StatusChoices.FAILED
+            
         attempt.end_time = timezone.now()
         
     attempt.save()
@@ -648,6 +650,7 @@ def export_exam_report(request, exam_id):
         "ID", "Documento", "Nombre", "Correo", 
         "Examen", "Estado del Intento", "Preguntas Respondidas (X)", "Respuestas Correctas (C)", 
         "Respuestas Incorrectas (W)", "% Aciertos", "Índice S Actual", "Historial Score (S)",
+        "Nivel (Semáforo)",
         "Fecha/Hora Inicio", "Fecha/Hora Fin", "Duración (Minutos)"
     ]
 
@@ -679,19 +682,41 @@ def export_exam_report(request, exam_id):
         
         s_history_str = json.dumps(attempt.s_history) if attempt.s_history else "[]"
 
+        historial_s = attempt.s_history or []
+        nivel_semaforo = "Sin datos suficientes"
+        
+        if len(historial_s) >= 3:
+            tendencia = 0
+            for i in range(1, len(historial_s)):
+                if historial_s[i] < historial_s[i - 1]:
+                    tendencia += 1
+                elif historial_s[i] > historial_s[i - 1]:
+                    tendencia -= 1
+                    
+            mitad_longitud = len(historial_s) // 2
+            
+            if tendencia >= mitad_longitud:
+                nivel_semaforo = "Consistente positivo"       # Consistente positivo
+            elif tendencia <= -mitad_longitud:
+                nivel_semaforo = "Consistente negativo"       # Consistente negativo
+            else:
+                nivel_semaforo = "Inconsistente"              # Inconsistente
+        # ------------------------------------------------
+        
         row = [
             attempt.id,
             user.document_number or "N/A",
             f"{user.first_name} {user.last_name or ''}".strip(),
             user.email,
             exam.title,
-            attempt.get_status_display(), # Muestra la etiqueta legible (ej. "Aprobado")
+            attempt.get_status_display(),
             attempt.questions_answered,
             attempt.correct_count,
             attempt.incorrect_count,
             round(accuracy, 2),
             round(attempt.current_s_index, 4),
             s_history_str,
+            nivel_semaforo,
             start_time_str,
             end_time_str,
             duration
