@@ -23,6 +23,8 @@ import json
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.utils.timezone import localtime
+from openpyxl.chart import BarChart, Reference
+from openpyxl.chart import BarChart, ScatterChart, Reference, Series
 
 
 # -------------------------------------------------------------------
@@ -612,6 +614,7 @@ def exam_summary(request, attempt_id):
     
     return render(request, 'attempts/summary.html', context)
 
+
 # --------------------------------------------------------------------
 # Exportar reporte completo de un examen a Excel
 # --------------------------------------------------------------------
@@ -664,6 +667,14 @@ def export_exam_report(request, exam_id):
 
     # Diccionario para almacenar usuarios únicos para la segunda hoja
     unique_users = {}
+    
+    # --- Contador para el gráfico ---
+    conteo_niveles = {
+        "Consistente positivo": 0, 
+        "Inconsistente": 0, 
+        "Consistente negativo": 0, 
+        "Sin datos suficientes": 0
+    }
 
     for attempt in attempts:
         user = attempt.user
@@ -702,6 +713,8 @@ def export_exam_report(request, exam_id):
             else:
                 nivel_semaforo = "Inconsistente"              # Inconsistente
         # ------------------------------------------------
+        
+        conteo_niveles[nivel_semaforo] += 1
         
         row = [
             attempt.id,
@@ -763,8 +776,47 @@ def export_exam_report(request, exam_id):
         ]
         ws_users.append(row)
 
+    # ==========================================
+    # HOJA 3: GRÁFICO ESTADÍSTICO DE NIVELES
+    # ==========================================
+    ws_chart = wb.create_sheet(title="Estadísticas de Niveles")
+    
+    # 1. Escribir la tabla resumen que alimenta el gráfico
+    ws_chart.append(["Nivel (Semáforo)", "Cantidad de Estudiantes"])
+    
+    for nivel, cantidad in conteo_niveles.items():
+        ws_chart.append([nivel, cantidad])
+        
+    # Dar estilo a la cabecera de la tabla resumen
+    for cell in ws_chart[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # 2. Configurar el Gráfico de Barras
+    chart = BarChart()
+    chart.type = "col"          # Gráfico de columnas verticales
+    chart.style = 10            # Estilo predefinido de Excel (colores corporativos)
+    chart.title = "Distribución de Estudiantes por Nivel de Consistencia"
+    chart.y_axis.title = "Cantidad de Estudiantes"
+    chart.x_axis.title = "Niveles"
+    chart.width = 18            # Ancho del gráfico en el Excel
+    chart.height = 10           # Alto del gráfico en el Excel
+
+    # 3. Referenciar los datos (Los números están en la columna 2, de la fila 1 a la 5)
+    data = Reference(ws_chart, min_col=2, min_row=1, max_col=2, max_row=5)
+    
+    # 4. Referenciar las categorías (Los nombres están en la columna 1, de la fila 2 a la 5)
+    categorias = Reference(ws_chart, min_col=1, min_row=2, max_row=5)
+    
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(categorias)
+    
+    # 5. Insertar el gráfico en la hoja, al lado de la tabla (Celda D2)
+    ws_chart.add_chart(chart, "D2")
+
     # Ajustar el ancho de las columnas automáticamente para ambas hojas
-    for sheet in [ws_attempts, ws_users]:
+    for sheet in [ws_attempts, ws_users, ws_chart]:
         for col in sheet.columns:
             max_length = 0
             column_letter = col[0].column_letter
